@@ -25,7 +25,7 @@ h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;a
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dn{text-align:center;font-size:12px;color:var(--mu)}
 .d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px}
-.d.out{opacity:.35}.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac);color:#fff}
+.d.out{opacity:.35}.d.vac{background:color-mix(in srgb,#f2b705 24%,var(--card))}.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac);color:#fff}
 .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
 h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
@@ -43,6 +43,9 @@ h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ghost{background:none;border:0;color:var(--mu);padding:8px;cursor:pointer}
 #msg{background:#c0392b;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:none;font-size:14px}
 small{color:var(--mu)}
+.vinfo{font-size:13px;color:var(--mu);margin-top:8px}
+.vb{display:inline-block;background:color-mix(in srgb,#f2b705 24%,var(--card));border-radius:8px;padding:3px 9px;font-size:13px;margin-bottom:8px}
+.sheet select{border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:10px;width:100%}
 </style>
 </head>
 <body>
@@ -53,7 +56,8 @@ small{color:var(--mu)}
 <div id="vm">
   <div class="nav"><button id="pv">‹</button><b id="mt"></b><button id="nx">›</button></div>
   <div class="grid" id="g"></div>
-  <h2 id="dl"></h2><div id="de"></div>
+  <div class="vinfo" id="vi"></div>
+  <h2 id="dl"></h2><div id="vb"></div><div id="de"></div>
 </div>
 <div id="vl" style="display:none"></div>
 <button class="fab" id="add" aria-label="Ajouter un événement">+</button>
@@ -71,6 +75,8 @@ small{color:var(--mu)}
 <div class="sheet" id="sn"><form id="fn">
   <b>Prénoms de la famille</b>
   <input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20">
+  <small>Vacances scolaires affichées (réglage propre à cet appareil)</small>
+  <select id="zn"><option value="A">Zone A</option><option value="B">Zone B</option><option value="C">Zone C</option><option value="none">Ne pas afficher</option></select>
   <button class="ok">Enregistrer</button>
   <button type="button" class="ghost" id="cn2">Annuler</button>
   <small>Lien d'invitation pour les autres : <span id="lk"></span></small>
@@ -87,6 +93,8 @@ small{color:var(--mu)}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getFirestore,collection,doc,addDoc,deleteDoc,setDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== À REMPLACER par la configuration de votre projet Firebase ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyCf6rAhidS13gm8GB9vvRO2TLzjAXzp4lQ",
   authDomain: "agenda-familial-41892.firebaseapp.com",
@@ -95,15 +103,28 @@ const firebaseConfig = {
   messagingSenderId: "14931478594",
   appId: "1:14931478594:web:3293f04041f6b1cf9a05db"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);/* ======================================================================= */
+/* ======================================================================= */
 
 const COL=["#e4572e","#2f80ed","#27ae60","#9b51e0"];
 let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],me=0,sel=new Date(),cur=new Date(),fid="",db=null;
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 me=+store.get("ag_me")||0;
+let zone=store.get("ag_zone")||"C";
+/* Vacances scolaires 2026-2027 (dernier jour de vacances inclus). Source : calendrier officiel Éducation nationale. */
+const VAC=[
+ {n:"Vacances de la Toussaint",s:"2026-10-17",e:"2026-11-01",z:"ABC"},
+ {n:"Vacances de Noël",s:"2026-12-19",e:"2027-01-03",z:"ABC"},
+ {n:"Vacances d'hiver",s:"2027-02-13",e:"2027-02-28",z:"A"},
+ {n:"Vacances d'hiver",s:"2027-02-20",e:"2027-03-07",z:"B"},
+ {n:"Vacances d'hiver",s:"2027-02-06",e:"2027-02-21",z:"C"},
+ {n:"Vacances de printemps",s:"2027-04-10",e:"2027-04-25",z:"A"},
+ {n:"Vacances de printemps",s:"2027-04-17",e:"2027-05-02",z:"B"},
+ {n:"Vacances de printemps",s:"2027-04-03",e:"2027-04-18",z:"C"},
+ {n:"Pont de l'Ascension",s:"2027-05-06",e:"2027-05-09",z:"ABC"},
+ {n:"Vacances d'été",s:"2027-07-03",e:"2027-09-01",z:"ABC"}
+];
+const vacOn=k=>VAC.find(v=>v.z.includes(zone)&&k>=v.s&&k<=v.e);
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=(s,o)=>new Date(s+"T12:00").toLocaleDateString("fr-FR",o);
@@ -133,9 +154,13 @@ function render(){
   for(let i=0;i<42;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d);
     const dots=byDay(k).slice(0,6).map(e=>`<i style="--c:${COL[e.by]??COL[0]}"></i>`).join("");
-    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}">${d.getDate()}<span class="dots">${dots}</span></div>`;
+    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${vacOn(k)?"vac":""} ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}">${d.getDate()}<span class="dots">${dots}</span></div>`;
   }
   $("g").innerHTML=h;
+  const mS=iso(new Date(y,mo,1)),mE=iso(new Date(y,mo+1,0)),dm={day:"numeric",month:"short"};
+  const vm=VAC.filter(v=>v.z.includes(zone)&&v.s<=mE&&v.e>=mS);
+  $("vi").innerHTML=vm.length?"🟨 "+vm.map(v=>`${esc(v.n)} : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}`).join(" · ")+` (zone ${zone})`:"";
+  const vs=vacOn(iso(sel));$("vb").innerHTML=vs?`<span class="vb">🏖️ ${esc(vs.n)}</span>`:"";
   const l=byDay(iso(sel));
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
@@ -164,11 +189,12 @@ $("f").onsubmit=async e=>{
   catch(ex){err("Ajout impossible : "+ex.message)}
 };
 
-$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
+$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);$("zn").value=zone;$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
 $("cn2").onclick=()=>$("sn").classList.remove("open");
 $("out").onclick=()=>{if(confirm("Cet appareil quittera l'agenda actuel. Continuer ?")){store.del("ag_fid");location.reload()}};
 $("fn").onsubmit=async e=>{
   e.preventDefault();
+  zone=$("zn").value;store.set("ag_zone",zone);render();
   const n=[...document.querySelectorAll(".nm")].map((i,k)=>i.value.trim()||names[k]);
   try{await setDoc(doc(db,"families",fid,"meta","names"),{names:n});names=n;$("sn").classList.remove("open");render()}
   catch(ex){err("Enregistrement impossible : "+ex.message)}
