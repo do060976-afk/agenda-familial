@@ -27,11 +27,12 @@ h1 .sub{font-size:12px;color:var(--mu);font-weight:400;text-transform:capitalize
 .nav b{text-transform:capitalize;flex:1;text-align:center}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dn{text-align:center;font-size:12px;color:var(--mu)}
-.d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px}
+.d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px;position:relative}
 .d.out{opacity:.35}.d.fer{color:#d9453d;font-weight:700}
 .d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac)!important;color:#fff}
 .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+.d .bdic{position:absolute;top:1px;right:2px;font-size:10px;line-height:1}
 h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ev{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px}
 .ev .st{width:5px;border-radius:3px;align-self:stretch;flex:none}
@@ -40,8 +41,7 @@ h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ev .x,.ev .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
 .ev .ed{font-size:16px}
 .empty{color:var(--mu);font-size:14px;text-align:center;padding:14px}
-.fab{position:fixed;right:max(16px,calc(50% - 244px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:30px;box-shadow:0 4px 14px #0004;cursor:pointer}
-.fab.bd{background:#9b51e0;font-size:24px;bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.fab{position:fixed;right:max(16px,calc(50% - 244px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:30px;box-shadow:0 4px 14px #0004;cursor:pointer;z-index:6}
 .sheet{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;justify-content:center;z-index:5}
 .sheet.open{display:flex}
 .sheet form{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;max-height:90vh;overflow-y:auto}
@@ -62,6 +62,10 @@ small{color:var(--mu)}
 .bd .m{flex:1;min-width:0}.bd .t{font-weight:600}.bd .s{font-size:13px;color:var(--mu)}
 .bd .x,.bd .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
 .bd .ed{font-size:16px}
+.note{background:var(--card);border:1px solid var(--bd);border-left:5px solid #8a8178;border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px;align-items:flex-start}
+.note .m{flex:1;min-width:0}.note .t{font-weight:600}.note .s{font-size:13px;color:var(--mu);white-space:pre-wrap}
+.note .x,.note .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
+.note .ed{font-size:16px}
 .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .settings-actions button{flex:1;min-width:130px}
 .searchbar{position:relative;margin-bottom:10px;display:flex;gap:6px;align-items:center}
@@ -72,6 +76,12 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
 @media (prefers-color-scheme:dark){mark{background:#7a6517;color:#fff}}
 .sresults .empty{margin-top:20px}
 .scount{font-size:13px;color:var(--mu);margin:0 0 10px}
+.addmenu{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px}
+.addmenu .mh{font-size:13px;color:var(--mu);padding:4px 8px 8px;text-align:center}
+.addmenu button{display:flex;align-items:center;gap:12px;border:1px solid var(--bd);background:var(--bg);border-radius:12px;padding:14px 16px;cursor:pointer;font-size:15px;text-align:left}
+.addmenu button .ic{font-size:22px;width:28px;text-align:center}
+.addmenu button .lbl{flex:1}
+.addmenu button .sm{font-size:12px;color:var(--mu)}
 </style>
 </head>
 <body>
@@ -103,9 +113,18 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
 <div id="vw" style="display:none"></div>
 <div id="vl" style="display:none"></div>
 <div id="vs" style="display:none" class="sresults"></div>
-<button class="fab bd" id="addb" aria-label="Ajouter un anniversaire">🎂</button>
-<button class="fab" id="add" aria-label="Ajouter un événement">+</button>
+<button class="fab" id="add" aria-label="Ajouter">+</button>
 
+<!-- Menu d'ajout -->
+<div class="sheet" id="sa"><div class="addmenu">
+  <div class="mh">Que veux-tu ajouter ?</div>
+  <button type="button" data-type="event"><span class="ic">📅</span><span class="lbl">Nouvel événement</span></button>
+  <button type="button" data-type="birthday"><span class="ic">🎂</span><span class="lbl">Nouvel anniversaire</span></button>
+  <button type="button" data-type="note"><span class="ic">📝</span><span class="lbl">Nouvelle note</span></button>
+  <button type="button" class="ghost" id="cna" style="margin-top:6px">Annuler</button>
+</div></div>
+
+<!-- Formulaire événement -->
 <div class="sheet" id="sh"><form id="f">
   <b id="ft">Nouvel événement</b>
   <input id="ti" placeholder="Titre" required maxlength="80">
@@ -120,6 +139,7 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="cn">Annuler</button>
 </form></div>
 
+<!-- Formulaire anniversaire -->
 <div class="sheet" id="sb"><form id="fb">
   <b id="bt">Nouvel anniversaire</b>
   <input id="bn" placeholder="Prénom (ex. Mamie, Tonton Paul)" required maxlength="40">
@@ -132,6 +152,19 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="cnb">Annuler</button>
 </form></div>
 
+<!-- Formulaire note -->
+<div class="sheet" id="sno"><form id="fno">
+  <b id="nt">Nouvelle note</b>
+  <input id="nti" placeholder="Titre (ex. Payer la cantine)" required maxlength="80">
+  <textarea id="nd" rows="3" placeholder="Détail (facultatif)" maxlength="500"></textarea>
+  <div class="row"><input id="nda" type="date" required></div>
+  <small>Pour qui ? (facultatif)</small>
+  <div class="who" id="nwf"></div>
+  <button class="ok"><span id="pn">Ajouter</span></button>
+  <button type="button" class="ghost" id="cnn">Annuler</button>
+</form></div>
+
+<!-- Réglages -->
 <div class="sheet" id="sn2"><form id="fn">
   <b>Prénoms de la famille</b>
   <input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20">
@@ -151,6 +184,7 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="out">Changer de code famille sur cet appareil</button>
 </form></div>
 
+<!-- Code famille -->
 <div class="sheet" id="sc"><form id="fc">
   <b>Code famille</b>
   <small>Choisissez un code long et secret (ex. 3 mots + chiffres). Toute la famille doit saisir exactement le même.</small>
@@ -174,13 +208,13 @@ const firebaseConfig = {
 /* ======================================================================= */
 
 const COL=["#e4572e","#2f80ed","#27ae60","#9b51e0"];
-let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],birthdays=[],me=0,sel=new Date(),cur=new Date(),fid="",db=null;
-let view="m"; /* "m" = mois, "w" = semaine, "l" = à venir, "s" = recherche */
-let query=""; /* texte courant de la recherche */
+let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],birthdays=[],notes=[],me=0,sel=new Date(),cur=new Date(),fid="",db=null;
+let view="m";
+let query="";
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 me=+store.get("ag_me")||0;
-let editId=null, editBdId=null;
+let editId=null, editBdId=null, editNoId=null;
 let zones=store.get("ag_zones")??(store.get("ag_zone")?(store.get("ag_zone")==="none"?"":store.get("ag_zone")):"C");
 
 /* ====== SAINTS DU JOUR (source : calendrier catholique français, format MM-JJ) ====== */
@@ -267,7 +301,7 @@ const SAINTS={
 };
 const saintOf=k=>SAINTS[k.slice(5)]||"";
 
-/* Vacances scolaires 2026-2027 (dernier jour de vacances inclus). Source : calendrier officiel Éducation nationale. */
+/* Vacances scolaires 2026-2027 */
 const VAC=[
  {n:"Vacances de la Toussaint",s:"2026-10-17",e:"2026-11-01",z:"ABC"},
  {n:"Vacances de Noël",s:"2026-12-19",e:"2027-01-03",z:"ABC"},
@@ -300,57 +334,24 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const fmt=(s,o)=>new Date(s+"T12:00").toLocaleDateString("fr-FR",o);
 const err=t=>{const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"};
 
-/* ====== RECHERCHE : normalisation (casse + accents) ====== */
-/* Transforme "École" en "ecole" pour comparer sans souci d'accent ni de casse */
-function norm(s){
-  return String(s??"")
-    .toLowerCase()
-    .normalize("NFD")              /* sépare les lettres de leurs accents */
-    .replace(/[\u0300-\u036f]/g,""); /* supprime les accents */
-}
-/* Renvoie true si tous les mots de la requête sont présents dans le texte cible */
-function matchesQuery(text,words){
-  const t=norm(text);
-  return words.every(w=>t.includes(w));
-}
-/* Entoure les occurrences trouvées avec <mark> */
+/* ====== RECHERCHE : normalisation ====== */
+function norm(s){return String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function matchesQuery(text,words){const t=norm(text);return words.every(w=>t.includes(w))}
 function highlight(text,words){
   const raw=String(text??"");
   if(!words.length)return esc(raw);
-  /* On cherche sur la version normalisée pour trouver les positions, mais on rend le texte original */
-  const n=norm(raw);
-  const found=[];
-  for(const w of words){
-    let from=0,idx;
-    while((idx=n.indexOf(w,from))!==-1){
-      found.push([idx,idx+w.length]);
-      from=idx+w.length;
-    }
-  }
+  const n=norm(raw);const found=[];
+  for(const w of words){let from=0,idx;while((idx=n.indexOf(w,from))!==-1){found.push([idx,idx+w.length]);from=idx+w.length}}
   if(!found.length)return esc(raw);
-  /* Fusionne les chevauchements puis découpe */
-  found.sort((a,b)=>a[0]-b[0]);
-  const merged=[];
-  for(const seg of found){
-    const last=merged[merged.length-1];
-    if(last&&seg[0]<=last[1])last[1]=Math.max(last[1],seg[1]);
-    else merged.push([...seg]);
-  }
+  found.sort((a,b)=>a[0]-b[0]);const merged=[];
+  for(const seg of found){const last=merged[merged.length-1];if(last&&seg[0]<=last[1])last[1]=Math.max(last[1],seg[1]);else merged.push([...seg])}
   let out="",pos=0;
-  for(const [s,e] of merged){
-    out+=esc(raw.slice(pos,s))+"<mark>"+esc(raw.slice(s,e))+"</mark>";
-    pos=e;
-  }
-  out+=esc(raw.slice(pos));
-  return out;
+  for(const [s,e] of merged){out+=esc(raw.slice(pos,s))+"<mark>"+esc(raw.slice(s,e))+"</mark>";pos=e}
+  out+=esc(raw.slice(pos));return out;
 }
-/* Renvoie le texte complet d'un événement (pour la recherche) */
-function evText(e){
-  const ws=wsOf(e).map(i=>names[i]??"").join(" ");
-  return [e.title,e.desc,e.place,ws].filter(Boolean).join(" ");
-}
-/* Renvoie le texte complet d'un anniversaire */
+function evText(e){const ws=wsOf(e).map(i=>names[i]??"").join(" ");return [e.title,e.desc,e.place,ws].filter(Boolean).join(" ")}
 function bdText(b){return [b.name,b.note].filter(Boolean).join(" ")}
+function noText(n){const ws=wsOf(n).map(i=>names[i]??"").join(" ");return [n.title,n.desc,ws].filter(Boolean).join(" ")}
 
 /* Remplit les listes déroulantes jour/mois du formulaire anniversaire */
 const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
@@ -372,16 +373,6 @@ function evHtml(e,words=[]){
   <div class="s">${esc(ws.map(i=>names[i]??"?").join(", "))}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${highlight(e.desc,words)}</div>`:""}</div>
   <button class="ed" data-id="${esc(e.id)}" aria-label="Modifier">✏️</button><button class="x" data-id="${esc(e.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
-
-/* Calcule la prochaine occurrence d'un anniversaire à partir d'aujourd'hui */
-function nextBd(b){
-  const today=new Date();today.setHours(0,0,0,0);
-  const y=today.getFullYear();
-  const mk=yy=>new Date(yy,b.month-1,b.day);
-  let d=mk(y);
-  if(d<today)d=mk(y+1);
-  return d;
-}
 function bdHtml(b,words=[]){
   const d=nextBd(b);
   const inDays=Math.round((d-new Date().setHours(0,0,0,0))/86400000);
@@ -392,11 +383,30 @@ function bdHtml(b,words=[]){
   <button class="ed" data-bdid="${esc(b.id)}" aria-label="Modifier">✏️</button>
   <button class="x" data-bdid="${esc(b.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
+function noteHtml(n,words=[]){
+  const ws=wsOf(n);
+  const dm2={weekday:"long",day:"numeric",month:"long"};
+  const dateStr=new Date(n.date+"T12:00").toLocaleDateString("fr-FR",dm2);
+  const whoTxt=ws.length?esc(ws.map(i=>names[i]??"?").join(", ")):"";
+  return `<div class="note"><span style="font-size:22px">📝</span><div class="m"><div class="t">${highlight(n.title,words)}</div>
+  ${n.desc?`<div class="s">${highlight(n.desc,words)}</div>`:""}
+  <div class="s">${esc(dateStr)}${whoTxt?" · "+whoTxt:""}</div></div>
+  <button class="ed" data-noid="${esc(n.id)}" aria-label="Modifier">✏️</button>
+  <button class="x" data-noid="${esc(n.id)}" aria-label="Supprimer">🗑</button></div>`;
+}
 
-const byDay=d=>events.filter(e=>e.date<=d&&(e.endDate||e.date)>=d);
+function nextBd(b){
+  const today=new Date();today.setHours(0,0,0,0);
+  const y=today.getFullYear();
+  const mk=yy=>new Date(yy,b.month-1,b.day);
+  let d=mk(y);
+  if(d<today)d=mk(y+1);
+  return d;
+}
+
+const byDayEv=d=>events.filter(e=>e.date<=d&&(e.endDate||e.date)>=d);
+const byDayNo=d=>notes.filter(n=>n.date===d);
 const wsOf=e=>Array.isArray(e.who)&&e.who.length?e.who:[e.by??0];
-
-/* Renvoie le lundi de la semaine contenant d */
 function monday(d){const x=new Date(d);const j=(x.getDay()+6)%7;x.setDate(x.getDate()-j);x.setHours(0,0,0,0);return x}
 
 function renderTodayLabel(){
@@ -415,12 +425,15 @@ function render(){
   let h=["L","M","M","J","V","S","D"].map(x=>`<div class="dn">${x}</div>`).join("");
   for(let i=0;i<42;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d),zz=zonesOn(k);
-    const dots=[...new Set(byDay(k).flatMap(wsOf))].sort().map(i=>`<i style="--c:${COL[i]??COL[0]}"></i>`).join("");
-    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${ferieOn(k)?"fer":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}" title="${esc(ferieOn(k)||"")}">${d.getDate()}<span class="dots">${dots}</span></div>`;
+    const dots=[...new Set(byDayEv(k).flatMap(wsOf))].sort().map(i=>`<i style="--c:${COL[i]??COL[0]}"></i>`).join("");
+    const hasBd=birthdays.some(b=>b.month===d.getMonth()+1&&b.day===d.getDate());
+    const hasNote=byDayNo(k).length>0;
+    const corner=(hasBd?"🎂":"")+(hasNote?"📝":"");
+    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${ferieOn(k)?"fer":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}" title="${esc(ferieOn(k)||"")}">${corner?`<span class="bdic">${corner}</span>`:""}${d.getDate()}<span class="dots">${dots}</span></div>`;
   }
   $("g").innerHTML=h;
 
-  /* Encart sous la grille : jours fériés + vacances + anniversaires du mois */
+  /* Encart sous la grille */
   const mS=iso(new Date(y,mo,1)),mE=iso(new Date(y,mo+1,0)),dm={day:"numeric",month:"short"};
   let fh="";
   if(showFer){
@@ -436,10 +449,11 @@ function render(){
   $("vi").innerHTML=fh+vacLines+bdLine;
 
   $("vb").innerHTML=(ferieOn(iso(sel))?`<span class="vb">🎌 ${esc(ferieOn(iso(sel)))}</span>`:"")+vacs(iso(sel),iso(sel)).map(v=>`<span class="vb">${sq(v.zs)}🏖️ ${esc(v.n)} · zone ${v.zs.join("/")}</span>`).join("");
-  const l=byDay(iso(sel));
+  const lEv=byDayEv(iso(sel)),lNo=byDayNo(iso(sel)),lBd=birthdays.filter(b=>{const d=sel;return b.month===d.getMonth()+1&&b.day===d.getDate()});
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   $("sn").textContent=showSaint&&saintOf(iso(sel))?"📿 "+saintOf(iso(sel)):"";
-  $("de").innerHTML=l.length?l.map(e=>evHtml(e)).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
+  const dayHtml=[...lBd.map(b=>bdHtml(b)),...lNo.map(n=>noteHtml(n)),...lEv.map(e=>evHtml(e))].join("");
+  $("de").innerHTML=(lEv.length||lNo.length||lBd.length)?dayHtml:`<div class="empty">Rien de prévu ce jour-là</div>`;
 
   /* --- Vue Semaine --- */
   const todayStr=iso(new Date());
@@ -447,13 +461,15 @@ function render(){
   let wh="";
   for(let i=0;i<7;i++){
     const d=new Date(mon);d.setDate(mon.getDate()+i);const k=iso(d);
-    const evs=byDay(k);
+    const evs=byDayEv(k);
+    const nos=byDayNo(k);
     const bdsToday=birthdays.filter(b=>b.month===d.getMonth()+1&&b.day===d.getDate());
     const isToday=k===todayStr;
     const head=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
     wh+=`<h2 style="${isToday?"color:var(--ac)":""}">${isToday?"Aujourd'hui · ":""}${esc(head)}</h2>`;
-    if(!evs.length&&!bdsToday.length){wh+=`<div class="empty">Rien de prévu</div>`;continue}
+    if(!evs.length&&!bdsToday.length&&!nos.length){wh+=`<div class="empty">Rien de prévu</div>`;continue}
     for(const b of bdsToday)wh+=bdHtml(b);
+    for(const n of nos)wh+=noteHtml(n);
     for(const e of evs)wh+=evHtml(e);
   }
   $("vw").innerHTML=wh;
@@ -463,6 +479,9 @@ function render(){
   for(const e of events.filter(e=>(e.endDate||e.date)>=todayStr)){
     items.push({kind:"ev",date:e.date<todayStr?todayStr:e.date,data:e});
   }
+  for(const n of notes.filter(n=>n.date>=todayStr)){
+    items.push({kind:"no",date:n.date,data:n});
+  }
   for(const b of birthdays){
     items.push({kind:"bd",date:iso(nextBd(b)),data:b});
   }
@@ -470,15 +489,13 @@ function render(){
   let lh="",last="";
   for(const it of items){
     if(it.date!==last){last=it.date;lh+=`<h2>${it.date===todayStr?"Aujourd'hui":fmt(it.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}
-    lh+=it.kind==="bd"?bdHtml(it.data):evHtml(it.data);
+    lh+=it.kind==="bd"?bdHtml(it.data):it.kind==="no"?noteHtml(it.data):evHtml(it.data);
   }
   $("vl").innerHTML=lh||`<div class="empty">Aucun événement à venir</div>`;
 
-  /* --- Vue Recherche --- */
   renderSearch();
 }
 
-/* ====== AFFICHAGE DES RÉSULTATS DE RECHERCHE ====== */
 function renderSearch(){
   const el=$("vs");
   if(!query){el.innerHTML="";return}
@@ -486,27 +503,23 @@ function renderSearch(){
   if(!words.length){el.innerHTML="";return}
   const todayStr=iso(new Date());
   const results=[];
-  /* Événements à venir uniquement (date de fin >= aujourd'hui) */
   for(const e of events.filter(e=>(e.endDate||e.date)>=todayStr)){
-    if(matchesQuery(evText(e),words)){
-      results.push({kind:"ev",date:e.date<todayStr?todayStr:e.date,data:e});
-    }
+    if(matchesQuery(evText(e),words))results.push({kind:"ev",date:e.date<todayStr?todayStr:e.date,data:e});
   }
-  /* Anniversaires (toujours "à venir" puisqu'ils reviennent chaque année) */
+  for(const n of notes.filter(n=>n.date>=todayStr)){
+    if(matchesQuery(noText(n),words))results.push({kind:"no",date:n.date,data:n});
+  }
   for(const b of birthdays){
-    if(matchesQuery(bdText(b),words)){
-      results.push({kind:"bd",date:iso(nextBd(b)),data:b});
-    }
+    if(matchesQuery(bdText(b),words))results.push({kind:"bd",date:iso(nextBd(b)),data:b});
   }
   results.sort((a,b)=>a.date.localeCompare(b.date));
   let html=`<div class="scount">${results.length} résultat${results.length>1?"s":""} pour « ${esc(query)} »</div>`;
-  if(!results.length){
-    html+=`<div class="empty">Aucun résultat</div>`;
-  }else{
+  if(!results.length){html+=`<div class="empty">Aucun résultat</div>`}
+  else{
     let last="";
     for(const it of results){
       if(it.date!==last){last=it.date;html+=`<h2>${it.date===todayStr?"Aujourd'hui":fmt(it.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}
-      html+=it.kind==="bd"?bdHtml(it.data,words):evHtml(it.data,words);
+      html+=it.kind==="bd"?bdHtml(it.data,words):it.kind==="no"?noteHtml(it.data,words):evHtml(it.data,words);
     }
   }
   el.innerHTML=html;
@@ -532,24 +545,33 @@ $("tm").onclick=()=>setView("m");
 $("tw").onclick=()=>setView("w");
 $("tl").onclick=()=>setView("l");
 
-/* ====== GESTION DE LA BARRE DE RECHERCHE ====== */
+/* ====== BARRE DE RECHERCHE ====== */
 const searchInput=$("sq"),searchBar=$("searchbar");
 searchInput.addEventListener("input",()=>{
   query=searchInput.value.trim();
   searchBar.classList.toggle("has",!!query);
   if(query){
-    /* Bascule en vue recherche (sans casser la vue précédente, mémorisée dans view si on vide) */
-    if(view!=="s")setView("s");
-    else render();
+    if(view!=="s")setView("s");else render();
   }else{
-    /* Retour à la vue par défaut (Mois) quand on vide */
-    if(view==="s")setView("m");
-    else render();
+    if(view==="s")setView("m");else render();
   }
 });
 $("sclr").onclick=()=>{searchInput.value="";query="";searchBar.classList.remove("has");setView("m");searchInput.focus()};
 
-/* Suppression (événements ET anniversaires) */
+/* ====== MENU D'AJOUT ====== */
+$("add").onclick=()=>$("sa").classList.add("open");
+$("cna").onclick=()=>$("sa").classList.remove("open");
+document.querySelectorAll("#sa button[data-type]").forEach(b=>{
+  b.onclick=()=>{
+    const t=b.dataset.type;
+    $("sa").classList.remove("open");
+    if(t==="event")openForm(null);
+    else if(t==="birthday")openBdForm(null);
+    else if(t==="note")openNoteForm(null);
+  };
+});
+
+/* Suppression */
 document.body.addEventListener("click",async e=>{
   const x=e.target.closest(".x");
   if(!x||!db)return;
@@ -558,19 +580,25 @@ document.body.addEventListener("click",async e=>{
     try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.bdid));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
     return;
   }
+  if(x.dataset.noid){
+    if(!confirm("Supprimer cette note ?"))return;
+    try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.noid));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
+    return;
+  }
   if(x.dataset.id){
     if(!confirm("Supprimer cet événement ?"))return;
     try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.id));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
   }
 });
-/* Édition (événements ET anniversaires) */
+/* Édition */
 document.body.addEventListener("click",e=>{
   const b=e.target.closest(".ed");if(!b)return;
   if(b.dataset.bdid){const bd=birthdays.find(x=>x.id===b.dataset.bdid);if(bd)openBdForm(bd);return}
+  if(b.dataset.noid){const n=notes.find(x=>x.id===b.dataset.noid);if(n)openNoteForm(n);return}
   if(b.dataset.id){const ev=events.find(x=>x.id===b.dataset.id);if(ev)openForm(ev)}
 });
 
-function buildWho(ws){$("wf").innerHTML=names.map((n,i)=>`<label class="chip" style="--c:${COL[i]}"><input type="checkbox" value="${i}" ${ws.includes(i)?"checked":""}><span class="dot"></span>${esc(n)}</label>`).join("")}
+function buildWho(ws,containerId){$(containerId).innerHTML=names.map((n,i)=>`<label class="chip" style="--c:${COL[i]}"><input type="checkbox" value="${i}" ${ws.includes(i)?"checked":""}><span class="dot"></span>${esc(n)}</label>`).join("")}
 function openForm(ev){
   editId=ev?ev.id:null;
   $("f").reset();
@@ -579,7 +607,7 @@ function openForm(ev){
   if(ev){$("ti").value=ev.title||"";$("da").value=ev.date||"";$("df").value=ev.endDate||"";$("ho").value=ev.time||"";$("lo").value=ev.place||"";$("de2").value=ev.desc||""}
   else $("da").value=iso(sel);
   $("df").min=$("da").value;
-  buildWho(ev?wsOf(ev):[me]);who();$("sh").classList.add("open");$("ti").focus();
+  buildWho(ev?wsOf(ev):[me],"wf");who();$("sh").classList.add("open");$("ti").focus();
 }
 function openBdForm(bd){
   editBdId=bd?bd.id:null;
@@ -590,11 +618,19 @@ function openBdForm(bd){
   else{$("bj").value=new Date().getDate();$("bm").value=new Date().getMonth()+1}
   $("sb").classList.add("open");$("bn").focus();
 }
-$("add").onclick=()=>openForm(null);
-$("addb").onclick=()=>openBdForm(null);
+function openNoteForm(n){
+  editNoId=n?n.id:null;
+  $("fno").reset();
+  $("nt").textContent=n?"Modifier la note":"Nouvelle note";
+  $("pn").textContent=n?"Enregistrer":"Ajouter";
+  if(n){$("nti").value=n.title||"";$("nd").value=n.desc||"";$("nda").value=n.date||""}
+  else $("nda").value=iso(sel);
+  buildWho(n?wsOf(n):[me],"nwf");$("sno").classList.add("open");$("nti").focus();
+}
 $("da").onchange=()=>{$("df").min=$("da").value};
 $("cn").onclick=()=>{editId=null;who();$("sh").classList.remove("open")};
 $("cnb").onclick=()=>{editBdId=null;$("sb").classList.remove("open")};
+$("cnn").onclick=()=>{editNoId=null;$("sno").classList.remove("open")};
 
 $("f").onsubmit=async e=>{
   e.preventDefault();if(!db)return;
@@ -623,6 +659,19 @@ $("fb").onsubmit=async e=>{
   }catch(ex){err("Enregistrement impossible : "+ex.message)}
 };
 
+$("fno").onsubmit=async e=>{
+  e.preventDefault();if(!db)return;
+  const w=[...document.querySelectorAll("#nwf input:checked")].map(c=>+c.value);
+  const n={type:"note",title:$("nti").value.trim(),desc:$("nd").value.trim(),date:$("nda").value,who:w.length?w:[me]};
+  if(!n.title||!n.date)return;
+  try{
+    const ref=collection(db,"families",fid,"events");
+    if(editNoId)await updateDoc(doc(db,"families",fid,"events",editNoId),n);
+    else await addDoc(ref,{...n,by:me,at:Date.now()});
+    editNoId=null;$("fno").reset();$("sno").classList.remove("open");err("");render();
+  }catch(ex){err("Enregistrement impossible : "+ex.message)}
+};
+
 $("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);document.querySelectorAll("#zs input").forEach(c=>c.checked=zones.includes(c.value));$("fe").checked=showFer;$("fs").checked=showSaint;$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn2").classList.add("open")};
 $("cn2").onclick=()=>$("sn2").classList.remove("open");
 $("out").onclick=()=>{if(confirm("Cet appareil quittera l'agenda actuel. Continuer ?")){store.del("ag_fid");location.reload()}};
@@ -637,9 +686,9 @@ $("fn").onsubmit=async e=>{
   catch(ex){err("Enregistrement impossible : "+ex.message)}
 };
 
-/* ====== EXPORT / IMPORT JSON ====== */
+/* EXPORT / IMPORT JSON */
 $("expo").onclick=()=>{
-  const data={version:1,exportedAt:new Date().toISOString(),names,events,birthdays};
+  const data={version:1,exportedAt:new Date().toISOString(),names,events,birthdays,notes};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
@@ -656,47 +705,38 @@ $("impf").onchange=async ev=>{
   try{
     const text=await file.text();
     const data=JSON.parse(text);
-    if(!data||(!Array.isArray(data.events)&&!Array.isArray(data.birthdays)))throw new Error("Format non reconnu");
     const ref=collection(db,"families",fid,"events");
     let n=0;
-    for(const e of (data.events||[])){
-      const {id,...rest}=e;
-      if(!rest.title||!rest.date)continue;
-      await addDoc(ref,{...rest,at:Date.now()});n++;
-    }
-    for(const b of (data.birthdays||[])){
-      const {id,...rest}=b;
-      if(!rest.name||!rest.day||!rest.month)continue;
-      await addDoc(ref,{...rest,type:"birthday",at:Date.now()});n++;
-    }
+    for(const e of (data.events||[])){const {id,...rest}=e;if(!rest.title||!rest.date)continue;await addDoc(ref,{...rest,at:Date.now()});n++}
+    for(const b of (data.birthdays||[])){const {id,...rest}=b;if(!rest.name||!rest.day||!rest.month)continue;await addDoc(ref,{...rest,type:"birthday",at:Date.now()});n++}
+    for(const no of (data.notes||[])){const {id,...rest}=no;if(!rest.title||!rest.date)continue;await addDoc(ref,{...rest,type:"note",at:Date.now()});n++}
     alert("Import terminé : "+n+" élément(s) ajouté(s).");
     ev.target.value="";
   }catch(ex){err("Import impossible : "+ex.message);ev.target.value=""}
 };
 
-/* ====== INDICATEUR HORS-LIGNE ====== */
-function updateOnline(){
-  $("offline").style.display=navigator.onLine?"none":"block";
-}
+/* INDICATEUR HORS-LIGNE */
+function updateOnline(){$("offline").style.display=navigator.onLine?"none":"block"}
 window.addEventListener("online",updateOnline);
 window.addEventListener("offline",updateOnline);
 updateOnline();
 
 async function start(){
   render();
-  if(String(firebaseConfig.apiKey).startsWith("COLLEZ")){err("Configuration Firebase manquante : collez votre firebaseConfig dans index.html.");return}
+  if(String(firebaseConfig.apiKey).startsWith("COLLEZ")){err("Configuration Firebase manquante.");return}
   const m=location.hash.match(/c=([^&]+)/);
   if(m){store.set("ag_fid",decodeURIComponent(m[1]));history.replaceState(null,"",location.pathname)}
   fid=store.get("ag_fid")||"";
   if(fid.length<10){$("sc").classList.add("open");return}
   const app=initializeApp(firebaseConfig);
   db=getFirestore(app);
-  try{await enableIndexedDbPersistence(db)}catch(ex){/* ignore si déjà activé ou non supporté */}
+  try{await enableIndexedDbPersistence(db)}catch(ex){}
   onSnapshot(doc(db,"families",fid,"meta","names"),s=>{const d=s.exists()&&s.data();if(d&&Array.isArray(d.names)&&d.names.length===4){names=d.names;render()}},()=>{});
   onSnapshot(collection(db,"families",fid,"events"),s=>{
     const all=s.docs.map(d=>({id:d.id,...d.data()}));
-    events=all.filter(x=>x.type!=="birthday").sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
+    events=all.filter(x=>x.type!=="birthday"&&x.type!=="note").sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
     birthdays=all.filter(x=>x.type==="birthday");
+    notes=all.filter(x=>x.type==="note").sort((a,b)=>a.date.localeCompare(b.date));
     err("");render();
   },e=>err("Lecture impossible : "+e.message));
 }
