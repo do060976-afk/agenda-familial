@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f6f5e">
+<title>Agenda familial</title>
+<style>
+:root{--bg:#faf8f5;--card:#fff;--tx:#2a2622;--mu:#8a8178;--bd:#e8e2da;--ac:#2f6f5e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1917;--card:#262321;--tx:#f1ece6;--mu:#a39a90;--bd:#3a3531;--ac:#5fb8a0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:520px;margin-inline:auto;padding:12px 12px 90px}
+button,input,textarea{font:inherit;color:inherit}
+h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center}
+.who{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:2px solid var(--bd);background:var(--card);border-radius:20px;padding:5px 12px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--card))}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block}
+.tabs{display:flex;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:3px;margin-bottom:10px}
+.tabs button{flex:1;border:0;background:none;padding:8px;border-radius:9px;cursor:pointer}
+.tabs button.on{background:var(--ac);color:#fff}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.nav button{border:1px solid var(--bd);background:var(--card);border-radius:10px;width:40px;height:36px;cursor:pointer}
+.nav b{text-transform:capitalize}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dn{text-align:center;font-size:12px;color:var(--mu)}
+.d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px}
+.d.out{opacity:.35}.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac);color:#fff}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
+h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
+.ev{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--c);border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px}
+.ev .m{flex:1;min-width:0}.ev .t{font-weight:600}.ev .s{font-size:13px;color:var(--mu)}
+.ev .x{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
+.empty{color:var(--mu);font-size:14px;text-align:center;padding:14px}
+.fab{position:fixed;right:max(16px,calc(50% - 244px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:30px;box-shadow:0 4px 14px #0004;cursor:pointer}
+.sheet{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;justify-content:center;z-index:5}
+.sheet.open{display:flex}
+.sheet form{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.sheet input,.sheet textarea{border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:10px;width:100%}
+.row{display:flex;gap:8px}
+.ok{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:600}
+.ghost{background:none;border:0;color:var(--mu);padding:8px;cursor:pointer}
+#msg{background:#c0392b;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:none;font-size:14px}
+small{color:var(--mu)}
+</style>
+</head>
+<body>
+<h1>👨‍👩‍👧‍👦 Agenda familial <button class="ghost" id="edit" title="Réglages">⚙️</button></h1>
+<div id="msg"></div>
+<div class="who" id="who"></div>
+<div class="tabs"><button id="tm" class="on">Mois</button><button id="tl">À venir</button></div>
+<div id="vm">
+  <div class="nav"><button id="pv">‹</button><b id="mt"></b><button id="nx">›</button></div>
+  <div class="grid" id="g"></div>
+  <h2 id="dl"></h2><div id="de"></div>
+</div>
+<div id="vl" style="display:none"></div>
+<button class="fab" id="add" aria-label="Ajouter un événement">+</button>
+
+<div class="sheet" id="sh"><form id="f">
+  <b>Nouvel événement</b>
+  <input id="ti" placeholder="Titre" required maxlength="80">
+  <div class="row"><input id="da" type="date" required><input id="ho" type="time"></div>
+  <input id="lo" placeholder="Lieu (facultatif)" maxlength="80">
+  <textarea id="de2" rows="2" placeholder="Description (facultatif)" maxlength="300"></textarea>
+  <button class="ok">Ajouter pour <span id="au"></span></button>
+  <button type="button" class="ghost" id="cn">Annuler</button>
+</form></div>
+
+<div class="sheet" id="sn"><form id="fn">
+  <b>Prénoms de la famille</b>
+  <input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20">
+  <button class="ok">Enregistrer</button>
+  <button type="button" class="ghost" id="cn2">Annuler</button>
+  <small>Lien d'invitation pour les autres : <span id="lk"></span></small>
+  <button type="button" class="ghost" id="out">Changer de code famille sur cet appareil</button>
+</form></div>
+
+<div class="sheet" id="sc"><form id="fc">
+  <b>Code famille</b>
+  <small>Choisissez un code long et secret (ex. 3 mots + chiffres). Toute la famille doit saisir exactement le même.</small>
+  <input id="cd" placeholder="ex : renard-bleu-piano-4821" minlength="10" maxlength="60" required autocomplete="off" autocapitalize="off">
+  <button class="ok">Ouvrir l'agenda</button>
+</form></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,collection,doc,addDoc,deleteDoc,setDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ====== À REMPLACER par la configuration de votre projet Firebase ====== */
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCf6rAhidS13gm8GB9vvRO2TLzjAXzp4lQ",
+  authDomain: "agenda-familial-41892.firebaseapp.com",
+  projectId: "agenda-familial-41892",
+  storageBucket: "agenda-familial-41892.firebasestorage.app",
+  messagingSenderId: "14931478594",
+  appId: "1:14931478594:web:3293f04041f6b1cf9a05db"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);/* ======================================================================= */
+
+const COL=["#e4572e","#2f80ed","#27ae60","#9b51e0"];
+let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],me=0,sel=new Date(),cur=new Date(),fid="",db=null;
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+me=+store.get("ag_me")||0;
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=(s,o)=>new Date(s+"T12:00").toLocaleDateString("fr-FR",o);
+const err=t=>{const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"};
+
+function who(){
+  $("who").innerHTML=names.map((n,i)=>`<button class="chip ${i===me?"on":""}" style="--c:${COL[i]}" data-i="${i}"><span class="dot"></span>${esc(n)}</button>`).join("");
+  $("au").textContent=names[me];
+}
+$("who").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;me=+b.dataset.i;store.set("ag_me",me);who()};
+
+function evHtml(e){
+  const c=COL[e.by]??COL[0];
+  const meta=[e.time,e.place&&"📍 "+e.place].filter(Boolean).join(" · ");
+  return `<div class="ev" style="--c:${c}"><div class="m"><div class="t">${esc(e.title)}</div>
+  <div class="s">${esc(names[e.by]??"?")}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${esc(e.desc)}</div>`:""}</div>
+  <button class="x" data-id="${esc(e.id)}" aria-label="Supprimer">🗑</button></div>`;
+}
+const byDay=d=>events.filter(e=>e.date===d);
+
+function render(){
+  who();
+  const y=cur.getFullYear(),mo=cur.getMonth();
+  $("mt").textContent=cur.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const off=(new Date(y,mo,1).getDay()+6)%7,start=new Date(y,mo,1-off);
+  let h=["L","M","M","J","V","S","D"].map(x=>`<div class="dn">${x}</div>`).join("");
+  for(let i=0;i<42;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d);
+    const dots=byDay(k).slice(0,6).map(e=>`<i style="--c:${COL[e.by]??COL[0]}"></i>`).join("");
+    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}">${d.getDate()}<span class="dots">${dots}</span></div>`;
+  }
+  $("g").innerHTML=h;
+  const l=byDay(iso(sel));
+  $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
+  const today=iso(new Date());let lh="",last="";
+  for(const e of events.filter(e=>e.date>=today)){if(e.date!==last){last=e.date;lh+=`<h2>${fmt(e.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}lh+=evHtml(e)}
+  $("vl").innerHTML=lh||`<div class="empty">Aucun événement à venir</div>`;
+}
+$("g").onclick=e=>{const d=e.target.closest(".d");if(!d)return;sel=new Date(d.dataset.d+"T12:00");render()};
+$("pv").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()};
+$("nx").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()};
+$("tm").onclick=()=>{$("vm").style.display="";$("vl").style.display="none";$("tm").className="on";$("tl").className=""};
+$("tl").onclick=()=>{$("vm").style.display="none";$("vl").style.display="";$("tl").className="on";$("tm").className=""};
+
+document.body.addEventListener("click",async e=>{
+  const x=e.target.closest(".x");if(!x||!db)return;
+  if(!confirm("Supprimer cet événement ?"))return;
+  try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.id));err("")}catch(ex){err("Suppression impossible : "+ex.message)}
+});
+$("add").onclick=()=>{$("da").value=iso(sel);$("sh").classList.add("open");$("ti").focus()};
+$("cn").onclick=()=>$("sh").classList.remove("open");
+$("f").onsubmit=async e=>{
+  e.preventDefault();if(!db)return;
+  const ev={title:$("ti").value.trim(),date:$("da").value,time:$("ho").value,place:$("lo").value.trim(),desc:$("de2").value.trim(),by:me,at:Date.now()};
+  if(!ev.title||!ev.date)return;
+  try{await addDoc(collection(db,"families",fid,"events"),ev);$("f").reset();$("sh").classList.remove("open");sel=new Date(ev.date+"T12:00");cur=new Date(sel.getFullYear(),sel.getMonth(),1);err("");render()}
+  catch(ex){err("Ajout impossible : "+ex.message)}
+};
+
+$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
+$("cn2").onclick=()=>$("sn").classList.remove("open");
+$("out").onclick=()=>{if(confirm("Cet appareil quittera l'agenda actuel. Continuer ?")){store.del("ag_fid");location.reload()}};
+$("fn").onsubmit=async e=>{
+  e.preventDefault();
+  const n=[...document.querySelectorAll(".nm")].map((i,k)=>i.value.trim()||names[k]);
+  try{await setDoc(doc(db,"families",fid,"meta","names"),{names:n});names=n;$("sn").classList.remove("open");render()}
+  catch(ex){err("Enregistrement impossible : "+ex.message)}
+};
+
+function start(){
+  render();
+  if(String(firebaseConfig.apiKey).startsWith("COLLEZ")){err("Configuration Firebase manquante : collez votre firebaseConfig dans index.html.");return}
+  const m=location.hash.match(/c=([^&]+)/);
+  if(m){store.set("ag_fid",decodeURIComponent(m[1]));history.replaceState(null,"",location.pathname)}
+  fid=store.get("ag_fid")||"";
+  if(fid.length<10){$("sc").classList.add("open");return}
+  db=getFirestore(initializeApp(firebaseConfig));
+  onSnapshot(doc(db,"families",fid,"meta","names"),s=>{const d=s.exists()&&s.data();if(d&&Array.isArray(d.names)&&d.names.length===4){names=d.names;render()}},()=>{});
+  onSnapshot(collection(db,"families",fid,"events"),s=>{
+    events=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
+    err("");render();
+  },e=>err("Lecture impossible : "+e.message));
+}
+$("fc").onsubmit=e=>{e.preventDefault();store.set("ag_fid",$("cd").value.trim());location.reload()};
+start();
+</script>
+</body>
+</html>
