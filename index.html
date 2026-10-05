@@ -12,17 +12,19 @@
 :root{--za:color-mix(in srgb,#f2b705 32%,var(--card));--zb:color-mix(in srgb,#ff7eb6 32%,var(--card));--zc:color-mix(in srgb,#19b5d6 32%,var(--card))}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:520px;margin-inline:auto;padding:12px 12px 90px}
 button,input,textarea,select{font:inherit;color:inherit}
-h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1 .ttl{display:flex;flex-direction:column;line-height:1.2}
+h1 .sub{font-size:12px;color:var(--mu);font-weight:400;text-transform:capitalize}
 .who{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .chip{border:2px solid var(--bd);background:var(--card);border-radius:20px;padding:5px 12px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px}
 .chip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--card))}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block}
 .tabs{display:flex;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:3px;margin-bottom:10px}
-.tabs button{flex:1;border:0;background:none;padding:8px;border-radius:9px;cursor:pointer}
+.tabs button{flex:1;border:0;background:none;padding:8px;border-radius:9px;cursor:pointer;font-size:14px}
 .tabs button.on{background:var(--ac);color:#fff}
-.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.nav button{border:1px solid var(--bd);background:var(--card);border-radius:10px;width:40px;height:36px;cursor:pointer}
-.nav b{text-transform:capitalize}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px}
+.nav button{border:1px solid var(--bd);background:var(--card);border-radius:10px;min-width:40px;height:36px;cursor:pointer;padding:0 8px}
+.nav b{text-transform:capitalize;flex:1;text-align:center}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dn{text-align:center;font-size:12px;color:var(--mu)}
 .d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px}
@@ -48,6 +50,7 @@ h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ok{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:600}
 .ghost{background:none;border:0;color:var(--mu);padding:8px;cursor:pointer}
 #msg{background:#c0392b;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:none;font-size:14px}
+#offline{background:#8a6d00;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:none;font-size:14px;text-align:center}
 small{color:var(--mu)}
 .vinfo{font-size:13px;color:var(--mu);margin-top:8px}
 .vb{display:inline-block;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px 9px;font-size:13px;margin:0 6px 8px 0}
@@ -59,21 +62,33 @@ small{color:var(--mu)}
 .bd .m{flex:1;min-width:0}.bd .t{font-weight:600}.bd .s{font-size:13px;color:var(--mu)}
 .bd .x,.bd .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
 .bd .ed{font-size:16px}
+.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.settings-actions button{flex:1;min-width:130px}
 </style>
 </head>
 <body>
-<h1>👨‍👩‍👧‍👦 Agenda familial <button class="ghost" id="edit" title="Réglages">⚙️</button></h1>
+<h1>
+  <span class="ttl"><span>👨‍👩‍👧‍👦 Agenda familial</span><span class="sub" id="todayLabel"></span></span>
+  <button class="ghost" id="edit" title="Réglages">⚙️</button>
+</h1>
 <div id="msg"></div>
+<div id="offline">📡 Hors-ligne — les modifications seront synchronisées au retour du réseau</div>
 <div class="who" id="who"></div>
-<div class="tabs"><button id="tm" class="on">Mois</button><button id="tl">À venir</button></div>
+<div class="tabs"><button id="tm" class="on">Mois</button><button id="tw">Cette semaine</button><button id="tl">À venir</button></div>
 <div id="vm">
-  <div class="nav"><button id="pv" aria-label="Mois précédent">‹</button><b id="mt"></b><button id="nx" aria-label="Mois suivant">›</button></div>
+  <div class="nav">
+    <button id="pv" aria-label="Mois précédent">‹</button>
+    <button id="td" aria-label="Aujourd'hui" title="Revenir à aujourd'hui">Aujourd'hui</button>
+    <b id="mt"></b>
+    <button id="nx" aria-label="Mois suivant">›</button>
+  </div>
   <div class="grid" id="g"></div>
   <div class="vinfo" id="vi"></div>
   <h2 id="dl"></h2>
   <div class="saint" id="sn"></div>
   <div id="vb"></div><div id="de"></div>
 </div>
+<div id="vw" style="display:none"></div>
 <div id="vl" style="display:none"></div>
 <button class="fab bd" id="addb" aria-label="Ajouter un anniversaire">🎂</button>
 <button class="fab" id="add" aria-label="Ajouter un événement">+</button>
@@ -114,6 +129,12 @@ small{color:var(--mu)}
   <button class="ok">Enregistrer</button>
   <button type="button" class="ghost" id="cn2">Annuler</button>
   <small>Lien d'invitation pour les autres : <span id="lk"></span></small>
+  <small style="margin-top:8px">Sauvegarde et restauration (réglage propre à cet appareil)</small>
+  <div class="settings-actions">
+    <button type="button" class="ghost" id="expo" style="border:1px solid var(--bd);border-radius:10px">📥 Exporter (JSON)</button>
+    <button type="button" class="ghost" id="impo" style="border:1px solid var(--bd);border-radius:10px">📤 Importer (JSON)</button>
+  </div>
+  <input type="file" id="impf" accept="application/json,.json" style="display:none">
   <button type="button" class="ghost" id="out">Changer de code famille sur cet appareil</button>
 </form></div>
 
@@ -141,6 +162,7 @@ const firebaseConfig = {
 
 const COL=["#e4572e","#2f80ed","#27ae60","#9b51e0"];
 let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],birthdays=[],me=0,sel=new Date(),cur=new Date(),fid="",db=null;
+let view="m"; /* "m" = mois, "w" = semaine, "l" = à venir */
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 me=+store.get("ag_me")||0;
@@ -308,8 +330,19 @@ function bdHtml(b){
 const byDay=d=>events.filter(e=>e.date<=d&&(e.endDate||e.date)>=d);
 const wsOf=e=>Array.isArray(e.who)&&e.who.length?e.who:[e.by??0];
 
+/* Renvoie le lundi de la semaine contenant d */
+function monday(d){const x=new Date(d);const j=(x.getDay()+6)%7;x.setDate(x.getDate()-j);x.setHours(0,0,0,0);return x}
+
+function renderTodayLabel(){
+  const s=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  $("todayLabel").textContent=s;
+}
+
 function render(){
   who();
+  renderTodayLabel();
+
+  /* --- Vue Mois --- */
   const y=cur.getFullYear(),mo=cur.getMonth();
   $("mt").textContent=cur.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
   const off=(new Date(y,mo,1).getDay()+6)%7,start=new Date(y,mo,1-off);
@@ -332,7 +365,6 @@ function render(){
     }
   }
   const vacLines=vacs(mS,mE).map(v=>`<div>${sq(v.zs)}${esc(v.n)} (zone ${v.zs.join("/")}) : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}</div>`).join("");
-  /* Anniversaires du mois courant, triés par jour croissant */
   const bdThisMonth=birthdays.filter(b=>b.month===mo+1).sort((a,b)=>a.day-b.day);
   const bdLine=bdThisMonth.length?`<div>🎂 Anniversaires du mois : ${bdThisMonth.map(b=>`${esc(b.name)} (${b.day})`).join(", ")}</div>`:"";
   $("vi").innerHTML=fh+vacLines+bdLine;
@@ -343,11 +375,27 @@ function render(){
   $("sn").textContent=showSaint&&saintOf(iso(sel))?"📿 "+saintOf(iso(sel)):"";
   $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
 
-  /* Vue "À venir" : événements + anniversaires triés par date */
-  const today=iso(new Date());
+  /* --- Vue Semaine --- */
+  const todayStr=iso(new Date());
+  const mon=monday(new Date());
+  let wh="";
+  for(let i=0;i<7;i++){
+    const d=new Date(mon);d.setDate(mon.getDate()+i);const k=iso(d);
+    const evs=byDay(k);
+    const bdsToday=birthdays.filter(b=>b.month===d.getMonth()+1&&b.day===d.getDate());
+    const isToday=k===todayStr;
+    const head=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+    wh+=`<h2 style="${isToday?"color:var(--ac)":""}">${isToday?"Aujourd'hui · ":""}${esc(head)}</h2>`;
+    if(!evs.length&&!bdsToday.length){wh+=`<div class="empty">Rien de prévu</div>`;continue}
+    for(const b of bdsToday)wh+=bdHtml(b);
+    for(const e of evs)wh+=evHtml(e);
+  }
+  $("vw").innerHTML=wh;
+
+  /* --- Vue À venir --- */
   const items=[];
-  for(const e of events.filter(e=>(e.endDate||e.date)>=today)){
-    items.push({kind:"ev",date:e.date<today?today:e.date,data:e});
+  for(const e of events.filter(e=>(e.endDate||e.date)>=todayStr)){
+    items.push({kind:"ev",date:e.date<todayStr?todayStr:e.date,data:e});
   }
   for(const b of birthdays){
     items.push({kind:"bd",date:iso(nextBd(b)),data:b});
@@ -355,7 +403,7 @@ function render(){
   items.sort((a,b)=>a.date.localeCompare(b.date));
   let lh="",last="";
   for(const it of items){
-    if(it.date!==last){last=it.date;lh+=`<h2>${it.date===today?"Aujourd'hui":fmt(it.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}
+    if(it.date!==last){last=it.date;lh+=`<h2>${it.date===todayStr?"Aujourd'hui":fmt(it.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}
     lh+=it.kind==="bd"?bdHtml(it.data):evHtml(it.data);
   }
   $("vl").innerHTML=lh||`<div class="empty">Aucun événement à venir</div>`;
@@ -363,8 +411,20 @@ function render(){
 $("g").onclick=e=>{const d=e.target.closest(".d");if(!d)return;sel=new Date(d.dataset.d+"T12:00");render()};
 $("pv").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()};
 $("nx").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()};
-$("tm").onclick=()=>{$("vm").style.display="";$("vl").style.display="none";$("tm").className="on";$("tl").className=""};
-$("tl").onclick=()=>{$("vm").style.display="none";$("vl").style.display="";$("tl").className="on";$("tm").className=""};
+$("td").onclick=()=>{const t=new Date();sel=t;cur=new Date(t.getFullYear(),t.getMonth(),1);render()};
+function setView(v){
+  view=v;
+  $("vm").style.display=v==="m"?"":"none";
+  $("vw").style.display=v==="w"?"":"none";
+  $("vl").style.display=v==="l"?"":"none";
+  $("tm").className=v==="m"?"on":"";
+  $("tw").className=v==="w"?"on":"";
+  $("tl").className=v==="l"?"on":"";
+  render();
+}
+$("tm").onclick=()=>setView("m");
+$("tw").onclick=()=>setView("w");
+$("tl").onclick=()=>setView("l");
 
 /* Suppression (événements ET anniversaires) */
 document.body.addEventListener("click",async e=>{
@@ -454,6 +514,51 @@ $("fn").onsubmit=async e=>{
   catch(ex){err("Enregistrement impossible : "+ex.message)}
 };
 
+/* ====== EXPORT / IMPORT JSON ====== */
+$("expo").onclick=()=>{
+  const data={version:1,exportedAt:new Date().toISOString(),names,events,birthdays};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const d=new Date().toISOString().slice(0,10);
+  a.href=url;a.download="agenda-famille-"+d+".json";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$("impo").onclick=()=>$("impf").click();
+$("impf").onchange=async ev=>{
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  if(!confirm("Importer ce fichier ? Les éléments existants ne sont pas supprimés (doublons possibles).")){ev.target.value="";return}
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    if(!data||(!Array.isArray(data.events)&&!Array.isArray(data.birthdays)))throw new Error("Format non reconnu");
+    const ref=collection(db,"families",fid,"events");
+    let n=0;
+    for(const e of (data.events||[])){
+      const {id,...rest}=e;
+      if(!rest.title||!rest.date)continue;
+      await addDoc(ref,{...rest,at:Date.now()});n++;
+    }
+    for(const b of (data.birthdays||[])){
+      const {id,...rest}=b;
+      if(!rest.name||!rest.day||!rest.month)continue;
+      await addDoc(ref,{...rest,type:"birthday",at:Date.now()});n++;
+    }
+    alert("Import terminé : "+n+" élément(s) ajouté(s).");
+    ev.target.value="";
+  }catch(ex){err("Import impossible : "+ex.message);ev.target.value=""}
+};
+
+/* ====== INDICATEUR HORS-LIGNE ====== */
+function updateOnline(){
+  $("offline").style.display=navigator.onLine?"none":"block";
+}
+window.addEventListener("online",updateOnline);
+window.addEventListener("offline",updateOnline);
+updateOnline();
+
 async function start(){
   render();
   if(String(firebaseConfig.apiKey).startsWith("COLLEZ")){err("Configuration Firebase manquante : collez votre firebaseConfig dans index.html.");return}
@@ -463,12 +568,10 @@ async function start(){
   if(fid.length<10){$("sc").classList.add("open");return}
   const app=initializeApp(firebaseConfig);
   db=getFirestore(app);
-  /* Activation du cache offline : les données restent visibles sans réseau */
   try{await enableIndexedDbPersistence(db)}catch(ex){/* ignore si déjà activé ou non supporté */}
   onSnapshot(doc(db,"families",fid,"meta","names"),s=>{const d=s.exists()&&s.data();if(d&&Array.isArray(d.names)&&d.names.length===4){names=d.names;render()}},()=>{});
   onSnapshot(collection(db,"families",fid,"events"),s=>{
     const all=s.docs.map(d=>({id:d.id,...d.data()}));
-    /* Séparation événements / anniversaires selon le champ "type" */
     events=all.filter(x=>x.type!=="birthday").sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
     birthdays=all.filter(x=>x.type==="birthday");
     err("");render();
