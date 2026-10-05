@@ -9,7 +9,7 @@
 :root{--bg:#faf8f5;--card:#fff;--tx:#2a2622;--mu:#8a8178;--bd:#e8e2da;--ac:#2f6f5e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root{--bg:#1b1917;--card:#262321;--tx:#f1ece6;--mu:#a39a90;--bd:#3a3531;--ac:#5fb8a0}}
 *{box-sizing:border-box}
-:root{--za:color-mix(in srgb,#f2b705 32%,var(--card));--zb:color-mix(in srgb,#ff7eb6 32%,var(--card));--zc:color-mix(in srgb,#19b5d6 32%,var(--card))}
+:root{--za:#f2b705;--zb:#ff7eb6;--zc:#19b5d6}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:520px;margin-inline:auto;padding:12px 12px 90px}
 button,input,textarea,select{font:inherit;color:inherit}
 h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -27,12 +27,24 @@ h1 .sub{font-size:12px;color:var(--mu);font-weight:400;text-transform:capitalize
 .nav b{text-transform:capitalize;flex:1;text-align:center}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dn{text-align:center;font-size:12px;color:var(--mu)}
-.d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px;position:relative}
-.d.out{opacity:.35}.d.fer{color:#d9453d;font-weight:700}
-.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac)!important;color:#fff}
-.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
-.dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
-.d .bdic{position:absolute;top:1px;right:2px;font-size:10px;line-height:1}
+/* ====== NOUVELLE CASE DE JOUR ====== */
+.d{position:relative;min-height:78px;background:var(--card);border:1px solid var(--bd);border-radius:8px;cursor:pointer;display:flex;flex-direction:column;overflow:hidden;padding:0}
+.d.out{opacity:.35}
+.d.today{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset}
+.d.sel{background:color-mix(in srgb,var(--ac) 18%,var(--card));border-color:var(--ac)}
+.d.sel .dnum{color:var(--ac);font-weight:800}
+.dtop{height:4px;width:100%;flex:none}
+.dbody{flex:1;display:flex;flex-direction:column;padding:3px 4px 4px;gap:2px;min-width:0}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;line-height:1;gap:2px}
+.dnum{font-size:13px;font-weight:600;padding-left:1px}
+.dic{font-size:11px;line-height:1;letter-spacing:-1px}
+.devs{display:flex;flex-direction:column;gap:2px;margin-top:1px;min-width:0}
+.devline{display:flex;align-items:center;gap:3px;font-size:10px;line-height:1.15;min-width:0;color:var(--tx)}
+.devbar{width:3px;height:11px;border-radius:2px;flex:none}
+.devtx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.dmore{font-size:9px;color:var(--mu);padding-left:5px;line-height:1.2}
+.d.fer .dnum{color:#d9453d}
+/* ====== FIN NOUVELLE CASE ====== */
 h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ev{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px}
 .ev .st{width:5px;border-radius:3px;align-self:stretch;flex:none}
@@ -81,7 +93,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
 .addmenu button{display:flex;align-items:center;gap:12px;border:1px solid var(--bd);background:var(--bg);border-radius:12px;padding:14px 16px;cursor:pointer;font-size:15px;text-align:left}
 .addmenu button .ic{font-size:22px;width:28px;text-align:center}
 .addmenu button .lbl{flex:1}
-.addmenu button .sm{font-size:12px;color:var(--mu)}
 </style>
 </head>
 <body>
@@ -115,7 +126,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
 <div id="vs" style="display:none" class="sresults"></div>
 <button class="fab" id="add" aria-label="Ajouter">+</button>
 
-<!-- Menu d'ajout -->
 <div class="sheet" id="sa"><div class="addmenu">
   <div class="mh">Que veux-tu ajouter ?</div>
   <button type="button" data-type="event"><span class="ic">📅</span><span class="lbl">Nouvel événement</span></button>
@@ -124,7 +134,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="cna" style="margin-top:6px">Annuler</button>
 </div></div>
 
-<!-- Formulaire événement -->
 <div class="sheet" id="sh"><form id="f">
   <b id="ft">Nouvel événement</b>
   <input id="ti" placeholder="Titre" required maxlength="80">
@@ -139,7 +148,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="cn">Annuler</button>
 </form></div>
 
-<!-- Formulaire anniversaire -->
 <div class="sheet" id="sb"><form id="fb">
   <b id="bt">Nouvel anniversaire</b>
   <input id="bn" placeholder="Prénom (ex. Mamie, Tonton Paul)" required maxlength="40">
@@ -152,7 +160,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="cnb">Annuler</button>
 </form></div>
 
-<!-- Formulaire note -->
 <div class="sheet" id="sno"><form id="fno">
   <b id="nt">Nouvelle note</b>
   <input id="nti" placeholder="Titre (ex. Payer la cantine)" required maxlength="80">
@@ -164,7 +171,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="cnn">Annuler</button>
 </form></div>
 
-<!-- Réglages -->
 <div class="sheet" id="sn2"><form id="fn">
   <b>Prénoms de la famille</b>
   <input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20">
@@ -184,7 +190,6 @@ mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
   <button type="button" class="ghost" id="out">Changer de code famille sur cet appareil</button>
 </form></div>
 
-<!-- Code famille -->
 <div class="sheet" id="sc"><form id="fc">
   <b>Code famille</b>
   <small>Choisissez un code long et secret (ex. 3 mots + chiffres). Toute la famille doit saisir exactement le même.</small>
@@ -217,7 +222,7 @@ me=+store.get("ag_me")||0;
 let editId=null, editBdId=null, editNoId=null;
 let zones=store.get("ag_zones")??(store.get("ag_zone")?(store.get("ag_zone")==="none"?"":store.get("ag_zone")):"C");
 
-/* ====== SAINTS DU JOUR (source : calendrier catholique français, format MM-JJ) ====== */
+/* ====== SAINTS DU JOUR ====== */
 const SAINTS={
 "01-01":"Sainte Marie, Mère de Dieu","01-02":"Saint Basile","01-03":"Sainte Geneviève","01-04":"Saint Odilon","01-05":"Saint Édouard",
 "01-06":"Épiphanie","01-07":"Saint Raymond de Peñafort","01-08":"Saint Lucien","01-09":"Sainte Alix","01-10":"Saint Guillaume",
@@ -326,7 +331,13 @@ const feries=y=>ferC[y]||(ferC[y]=(()=>{const e=easter(y),m={};
 const ferieOn=k=>showFer?feries(+k.slice(0,4))[k]:undefined;
 const ZC={A:"var(--za)",B:"var(--zb)",C:"var(--zc)"};
 const zonesOn=k=>[...zones].filter(z=>VAC.some(v=>v.z.includes(z)&&k>=v.s&&k<=v.e));
-const bgOf=zz=>{if(!zz.length)return"";if(zz.length===1)return"background:"+ZC[zz[0]];const n=zz.length;return"background:linear-gradient(to bottom,"+zz.map((z,i)=>`${ZC[z]} ${i*100/n}% ${(i+1)*100/n}%`).join(",")+")"};
+/* Bande de zones en haut de la case */
+const zoneStrip=zz=>{
+  if(!zz.length)return"";
+  const n=zz.length;
+  if(n===1)return"background:"+ZC[zz[0]];
+  return"background:linear-gradient(to right,"+zz.map((z,i)=>`${ZC[z]} ${i*100/n}% ${(i+1)*100/n}%`).join(",")+")";
+};
 const vacs=(a,b)=>VAC.map(v=>({...v,zs:[...v.z].filter(z=>zones.includes(z))})).filter(v=>v.zs.length&&v.s<=b&&v.e>=a).sort((x,y)=>x.s.localeCompare(y.s));
 const sq=zs=>zs.map(z=>`<span class="zq" style="background:${ZC[z]}"></span>`).join("");
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -334,7 +345,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const fmt=(s,o)=>new Date(s+"T12:00").toLocaleDateString("fr-FR",o);
 const err=t=>{const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"};
 
-/* ====== RECHERCHE : normalisation ====== */
+/* RECHERCHE */
 function norm(s){return String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
 function matchesQuery(text,words){const t=norm(text);return words.every(w=>t.includes(w))}
 function highlight(text,words){
@@ -353,7 +364,6 @@ function evText(e){const ws=wsOf(e).map(i=>names[i]??"").join(" ");return [e.tit
 function bdText(b){return [b.name,b.note].filter(Boolean).join(" ")}
 function noText(n){const ws=wsOf(n).map(i=>names[i]??"").join(" ");return [n.title,n.desc,ws].filter(Boolean).join(" ")}
 
-/* Remplit les listes déroulantes jour/mois du formulaire anniversaire */
 const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 $("bj").innerHTML=Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
 $("bm").innerHTML=MOIS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
@@ -406,8 +416,16 @@ function nextBd(b){
 
 const byDayEv=d=>events.filter(e=>e.date<=d&&(e.endDate||e.date)>=d);
 const byDayNo=d=>notes.filter(n=>n.date===d);
+const byDayBd=d=>{const x=new Date(d+"T12:00");return birthdays.filter(b=>b.month===x.getMonth()+1&&b.day===x.getDate())};
 const wsOf=e=>Array.isArray(e.who)&&e.who.length?e.who:[e.by??0];
 function monday(d){const x=new Date(d);const j=(x.getDay()+6)%7;x.setDate(x.getDate()-j);x.setHours(0,0,0,0);return x}
+
+/* Couleur de la barre d'un événement (premier membre, ou dégradé) */
+function evBarColor(e){
+  const ws=wsOf(e),n=ws.length;
+  if(n===1)return COL[ws[0]]??COL[0];
+  return"linear-gradient(to bottom,"+ws.map((i,k)=>`${COL[i]??COL[0]} ${k*100/n}% ${(k+1)*100/n}%`).join(",")+")";
+}
 
 function renderTodayLabel(){
   const s=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
@@ -423,13 +441,39 @@ function render(){
   $("mt").textContent=cur.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
   const off=(new Date(y,mo,1).getDay()+6)%7,start=new Date(y,mo,1-off);
   let h=["L","M","M","J","V","S","D"].map(x=>`<div class="dn">${x}</div>`).join("");
+  const todayIso=iso(new Date());
   for(let i=0;i<42;i++){
-    const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d),zz=zonesOn(k);
-    const dots=[...new Set(byDayEv(k).flatMap(wsOf))].sort().map(i=>`<i style="--c:${COL[i]??COL[0]}"></i>`).join("");
-    const hasBd=birthdays.some(b=>b.month===d.getMonth()+1&&b.day===d.getDate());
-    const hasNote=byDayNo(k).length>0;
-    const corner=(hasBd?"🎂":"")+(hasNote?"📝":"");
-    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${ferieOn(k)?"fer":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}" title="${esc(ferieOn(k)||"")}">${corner?`<span class="bdic">${corner}</span>`:""}${d.getDate()}<span class="dots">${dots}</span></div>`;
+    const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d);
+    const zz=zonesOn(k);
+    const evs=byDayEv(k);
+    const bds=byDayBd(k);
+    const nos=byDayNo(k);
+    /* Icônes coin haut droit (anniversaires + notes) avec infobulle */
+    const icons=[];
+    if(bds.length)icons.push(`<span title="${esc(bds.map(b=>"🎂 "+b.name+(b.note?" — "+b.note:"")).join("\n"))}">🎂</span>`);
+    if(nos.length)icons.push(`<span title="${esc(nos.map(n=>"📝 "+n.title+(n.desc?" — "+n.desc:"")).join("\n"))}">📝</span>`);
+    /* Tri des événements : ceux avec heure d'abord, par heure ; puis les autres */
+    const sorted=[...evs].sort((a,b)=>{
+      const ha=a.time||"99:99",hb=b.time||"99:99";
+      return ha.localeCompare(hb);
+    });
+    const MAX=3;
+    const shown=sorted.slice(0,MAX);
+    const more=sorted.length-MAX;
+    /* Lignes d'événements avec barre + début de titre (8 caractères) */
+    const evLines=shown.map(e=>{
+      const title=(e.title||"").slice(0,8);
+      return `<div class="devline" title="${esc(e.title)}"><span class="devbar" style="background:${evBarColor(e)}"></span><span class="devtx">${esc(title)}</span></div>`;
+    }).join("");
+    const moreLine=more>0?`<div class="dmore">+${more}</div>`:"";
+    const titleAttr=esc([ferieOn(k),...evs.map(e=>e.title)].filter(Boolean).join(" · "));
+    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${ferieOn(k)?"fer":""} ${k===todayIso?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" title="${titleAttr}">
+      <div class="dtop" style="${zoneStrip(zz)}"></div>
+      <div class="dbody">
+        <div class="dhead"><span class="dnum">${d.getDate()}</span>${icons.length?`<span class="dic">${icons.join("")}</span>`:""}</div>
+        ${evLines||moreLine?`<div class="devs">${evLines}${moreLine}</div>`:""}
+      </div>
+    </div>`;
   }
   $("g").innerHTML=h;
 
@@ -449,7 +493,7 @@ function render(){
   $("vi").innerHTML=fh+vacLines+bdLine;
 
   $("vb").innerHTML=(ferieOn(iso(sel))?`<span class="vb">🎌 ${esc(ferieOn(iso(sel)))}</span>`:"")+vacs(iso(sel),iso(sel)).map(v=>`<span class="vb">${sq(v.zs)}🏖️ ${esc(v.n)} · zone ${v.zs.join("/")}</span>`).join("");
-  const lEv=byDayEv(iso(sel)),lNo=byDayNo(iso(sel)),lBd=birthdays.filter(b=>{const d=sel;return b.month===d.getMonth()+1&&b.day===d.getDate()});
+  const lEv=byDayEv(iso(sel)),lNo=byDayNo(iso(sel)),lBd=byDayBd(iso(sel));
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   $("sn").textContent=showSaint&&saintOf(iso(sel))?"📿 "+saintOf(iso(sel)):"";
   const dayHtml=[...lBd.map(b=>bdHtml(b)),...lNo.map(n=>noteHtml(n)),...lEv.map(e=>evHtml(e))].join("");
@@ -463,12 +507,12 @@ function render(){
     const d=new Date(mon);d.setDate(mon.getDate()+i);const k=iso(d);
     const evs=byDayEv(k);
     const nos=byDayNo(k);
-    const bdsToday=birthdays.filter(b=>b.month===d.getMonth()+1&&b.day===d.getDate());
+    const bds=byDayBd(k);
     const isToday=k===todayStr;
     const head=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
     wh+=`<h2 style="${isToday?"color:var(--ac)":""}">${isToday?"Aujourd'hui · ":""}${esc(head)}</h2>`;
-    if(!evs.length&&!bdsToday.length&&!nos.length){wh+=`<div class="empty">Rien de prévu</div>`;continue}
-    for(const b of bdsToday)wh+=bdHtml(b);
+    if(!evs.length&&!bds.length&&!nos.length){wh+=`<div class="empty">Rien de prévu</div>`;continue}
+    for(const b of bds)wh+=bdHtml(b);
     for(const n of nos)wh+=noteHtml(n);
     for(const e of evs)wh+=evHtml(e);
   }
@@ -545,20 +589,15 @@ $("tm").onclick=()=>setView("m");
 $("tw").onclick=()=>setView("w");
 $("tl").onclick=()=>setView("l");
 
-/* ====== BARRE DE RECHERCHE ====== */
 const searchInput=$("sq"),searchBar=$("searchbar");
 searchInput.addEventListener("input",()=>{
   query=searchInput.value.trim();
   searchBar.classList.toggle("has",!!query);
-  if(query){
-    if(view!=="s")setView("s");else render();
-  }else{
-    if(view==="s")setView("m");else render();
-  }
+  if(query){if(view!=="s")setView("s");else render()}
+  else{if(view==="s")setView("m");else render()}
 });
 $("sclr").onclick=()=>{searchInput.value="";query="";searchBar.classList.remove("has");setView("m");searchInput.focus()};
 
-/* ====== MENU D'AJOUT ====== */
 $("add").onclick=()=>$("sa").classList.add("open");
 $("cna").onclick=()=>$("sa").classList.remove("open");
 document.querySelectorAll("#sa button[data-type]").forEach(b=>{
@@ -571,7 +610,6 @@ document.querySelectorAll("#sa button[data-type]").forEach(b=>{
   };
 });
 
-/* Suppression */
 document.body.addEventListener("click",async e=>{
   const x=e.target.closest(".x");
   if(!x||!db)return;
@@ -590,7 +628,6 @@ document.body.addEventListener("click",async e=>{
     try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.id));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
   }
 });
-/* Édition */
 document.body.addEventListener("click",e=>{
   const b=e.target.closest(".ed");if(!b)return;
   if(b.dataset.bdid){const bd=birthdays.find(x=>x.id===b.dataset.bdid);if(bd)openBdForm(bd);return}
@@ -686,7 +723,6 @@ $("fn").onsubmit=async e=>{
   catch(ex){err("Enregistrement impossible : "+ex.message)}
 };
 
-/* EXPORT / IMPORT JSON */
 $("expo").onclick=()=>{
   const data={version:1,exportedAt:new Date().toISOString(),names,events,birthdays,notes};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
@@ -715,7 +751,6 @@ $("impf").onchange=async ev=>{
   }catch(ex){err("Import impossible : "+ex.message);ev.target.value=""}
 };
 
-/* INDICATEUR HORS-LIGNE */
 function updateOnline(){$("offline").style.display=navigator.onLine?"none":"block"}
 window.addEventListener("online",updateOnline);
 window.addEventListener("offline",updateOnline);
