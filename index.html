@@ -26,11 +26,14 @@ h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;a
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dn{text-align:center;font-size:12px;color:var(--mu)}
 .d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px}
-.d.out{opacity:.35}.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac)!important;color:#fff}
+.d.out{opacity:.35}.d.fer{color:#d9453d;font-weight:700}
+.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac)!important;color:#fff}
 .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
 h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
-.ev{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--c);border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px}
+.ev{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px}
+.ev .st{width:5px;border-radius:3px;align-self:stretch;flex:none}
+.chip:has(input:checked){border-color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--card))}
 .ev .m{flex:1;min-width:0}.ev .t{font-weight:600}.ev .s{font-size:13px;color:var(--mu)}
 .ev .x,.ev .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
 .ev .ed{font-size:16px}
@@ -75,7 +78,9 @@ small{color:var(--mu)}
   <input id="df" type="date">
   <input id="lo" placeholder="Lieu (facultatif)" maxlength="80">
   <textarea id="de2" rows="2" placeholder="Description (facultatif)" maxlength="300"></textarea>
-  <button class="ok"><span id="pf">Ajouter pour </span><span id="au"></span></button>
+  <small>Pour qui ?</small>
+  <div class="who" id="wf"></div>
+  <button class="ok"><span id="pf">Ajouter</span><span id="au"></span></button>
   <button type="button" class="ghost" id="cn">Annuler</button>
 </form></div>
 
@@ -84,6 +89,7 @@ small{color:var(--mu)}
   <input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20">
   <small>Vacances scolaires : cochez une ou plusieurs zones (réglage propre à cet appareil)</small>
   <div class="row" id="zs"><label class="chip"><input type="checkbox" value="A"><span class="zq" style="background:var(--za);margin:0"></span>Zone A</label><label class="chip"><input type="checkbox" value="B"><span class="zq" style="background:var(--zb);margin:0"></span>Zone B</label><label class="chip"><input type="checkbox" value="C"><span class="zq" style="background:var(--zc);margin:0"></span>Zone C</label></div>
+  <label class="chip" style="align-self:flex-start"><input type="checkbox" id="fe"> 🎌 Afficher les jours fériés</label>
   <button class="ok">Enregistrer</button>
   <button type="button" class="ghost" id="cn2">Annuler</button>
   <small>Lien d'invitation pour les autres : <span id="lk"></span></small>
@@ -132,6 +138,15 @@ const VAC=[
  {n:"Pont de l'Ascension",s:"2027-05-06",e:"2027-05-09",z:"ABC"},
  {n:"Vacances d'été",s:"2027-07-03",e:"2027-09-01",z:"ABC"}
 ];
+let showFer=store.get("ag_fer")!=="0";
+const easter=y=>{const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const ferC={};
+const feries=y=>ferC[y]||(ferC[y]=(()=>{const e=easter(y),m={};
+ m[y+"-01-01"]="Jour de l'an";m[iso(addD(e,1))]="Lundi de Pâques";m[y+"-05-01"]="Fête du Travail";m[y+"-05-08"]="Victoire 1945";
+ m[iso(addD(e,39))]="Ascension";m[iso(addD(e,50))]="Lundi de Pentecôte";m[y+"-07-14"]="Fête nationale";m[y+"-08-15"]="Assomption";
+ m[y+"-11-01"]="Toussaint";m[y+"-11-11"]="Armistice 1918";m[y+"-12-25"]="Noël";return m})());
+const ferieOn=k=>showFer?feries(+k.slice(0,4))[k]:undefined;
 const ZC={A:"var(--za)",B:"var(--zb)",C:"var(--zc)"};
 const zonesOn=k=>[...zones].filter(z=>VAC.some(v=>v.z.includes(z)&&k>=v.s&&k<=v.e));
 const bgOf=zz=>{if(!zz.length)return"";if(zz.length===1)return"background:"+ZC[zz[0]];const n=zz.length;return"background:linear-gradient(to bottom,"+zz.map((z,i)=>`${ZC[z]} ${i*100/n}% ${(i+1)*100/n}%`).join(",")+")"};
@@ -144,20 +159,21 @@ const err=t=>{const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"}
 
 function who(){
   $("who").innerHTML=names.map((n,i)=>`<button class="chip ${i===me?"on":""}" style="--c:${COL[i]}" data-i="${i}"><span class="dot"></span>${esc(n)}</button>`).join("");
-  $("au").textContent=editId?"":names[me];
+  $("au").textContent="";
 }
 $("who").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;me=+b.dataset.i;store.set("ag_me",me);who()};
 
 function evHtml(e){
-  const c=COL[e.by]??COL[0];
+  const ws=wsOf(e),n=ws.length,stripe=n===1?(COL[ws[0]]??COL[0]):"linear-gradient(to bottom,"+ws.map((i,k)=>`${COL[i]} ${k*100/n}% ${(k+1)*100/n}%`).join(",")+")";
   const dm2={day:"numeric",month:"short"};
   const range=e.endDate&&e.endDate>e.date?`du ${fmt(e.date,dm2)} au ${fmt(e.endDate,dm2)}`:"";
   const meta=[range,e.time,e.place&&"📍 "+e.place].filter(Boolean).join(" · ");
-  return `<div class="ev" style="--c:${c}"><div class="m"><div class="t">${esc(e.title)}</div>
-  <div class="s">${esc(names[e.by]??"?")}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${esc(e.desc)}</div>`:""}</div>
+  return `<div class="ev"><i class="st" style="background:${stripe}"></i><div class="m"><div class="t">${esc(e.title)}</div>
+  <div class="s">${esc(ws.map(i=>names[i]??"?").join(", "))}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${esc(e.desc)}</div>`:""}</div>
   <button class="ed" data-id="${esc(e.id)}" aria-label="Modifier">✏️</button><button class="x" data-id="${esc(e.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
 const byDay=d=>events.filter(e=>e.date<=d&&(e.endDate||e.date)>=d);
+const wsOf=e=>Array.isArray(e.who)&&e.who.length?e.who:[e.by??0];
 
 function render(){
   who();
@@ -167,13 +183,14 @@ function render(){
   let h=["L","M","M","J","V","S","D"].map(x=>`<div class="dn">${x}</div>`).join("");
   for(let i=0;i<42;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d),zz=zonesOn(k);
-    const dots=byDay(k).slice(0,6).map(e=>`<i style="--c:${COL[e.by]??COL[0]}"></i>`).join("");
-    h+=`<div class="d ${d.getMonth()!==mo?"out":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}">${d.getDate()}<span class="dots">${dots}</span></div>`;
+    const dots=[...new Set(byDay(k).flatMap(wsOf))].sort().map(i=>`<i style="--c:${COL[i]??COL[0]}"></i>`).join("");
+    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${ferieOn(k)?"fer":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}" title="${esc(ferieOn(k)||"")}">${d.getDate()}<span class="dots">${dots}</span></div>`;
   }
   $("g").innerHTML=h;
   const mS=iso(new Date(y,mo,1)),mE=iso(new Date(y,mo+1,0)),dm={day:"numeric",month:"short"};
-  $("vi").innerHTML=vacs(mS,mE).map(v=>`<div>${sq(v.zs)}${esc(v.n)} (zone ${v.zs.join("/")}) : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}</div>`).join("");
-  $("vb").innerHTML=vacs(iso(sel),iso(sel)).map(v=>`<span class="vb">${sq(v.zs)}🏖️ ${esc(v.n)} · zone ${v.zs.join("/")}</span>`).join("");
+  let fh="";if(showFer){const nd=new Date(y,mo+1,0).getDate();for(let n=1;n<=nd;n++){const k=iso(new Date(y,mo,n)),f=ferieOn(k);if(f)fh+=`<div>🎌 ${esc(f)} : ${fmt(k,{weekday:"long",day:"numeric",month:"long"})}</div>`}}
+  $("vi").innerHTML=fh+vacs(mS,mE).map(v=>`<div>${sq(v.zs)}${esc(v.n)} (zone ${v.zs.join("/")}) : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}</div>`).join("");
+  $("vb").innerHTML=(ferieOn(iso(sel))?`<span class="vb">🎌 ${esc(ferieOn(iso(sel)))}</span>`:"")+vacs(iso(sel),iso(sel)).map(v=>`<span class="vb">${sq(v.zs)}🏖️ ${esc(v.n)} · zone ${v.zs.join("/")}</span>`).join("");
   const l=byDay(iso(sel));
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
@@ -192,15 +209,16 @@ document.body.addEventListener("click",async e=>{
   if(!confirm("Supprimer cet événement ?"))return;
   try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.id));err("")}catch(ex){err("Suppression impossible : "+ex.message)}
 });
+function buildWho(ws){$("wf").innerHTML=names.map((n,i)=>`<label class="chip" style="--c:${COL[i]}"><input type="checkbox" value="${i}" ${ws.includes(i)?"checked":""}><span class="dot"></span>${esc(n)}</label>`).join("")}
 function openForm(ev){
   editId=ev?ev.id:null;
   $("f").reset();
   $("ft").textContent=ev?"Modifier l'événement":"Nouvel événement";
-  $("pf").textContent=ev?"Enregistrer":"Ajouter pour ";
+  $("pf").textContent=ev?"Enregistrer":"Ajouter";
   if(ev){$("ti").value=ev.title||"";$("da").value=ev.date||"";$("df").value=ev.endDate||"";$("ho").value=ev.time||"";$("lo").value=ev.place||"";$("de2").value=ev.desc||""}
   else $("da").value=iso(sel);
   $("df").min=$("da").value;
-  who();$("sh").classList.add("open");$("ti").focus();
+  buildWho(ev?wsOf(ev):[me]);who();$("sh").classList.add("open");$("ti").focus();
 }
 $("add").onclick=()=>openForm(null);
 $("da").onchange=()=>{$("df").min=$("da").value};
@@ -211,7 +229,7 @@ document.body.addEventListener("click",e=>{
 });
 $("f").onsubmit=async e=>{
   e.preventDefault();if(!db)return;
-  const ev={title:$("ti").value.trim(),date:$("da").value,endDate:$("df").value,time:$("ho").value,place:$("lo").value.trim(),desc:$("de2").value.trim()};
+  const ev={title:$("ti").value.trim(),date:$("da").value,endDate:$("df").value,time:$("ho").value,place:$("lo").value.trim(),desc:$("de2").value.trim(),who:(()=>{const w=[...document.querySelectorAll("#wf input:checked")].map(c=>+c.value);return w.length?w:[me]})()};
   if(!ev.title||!ev.date)return;
   if(ev.endDate&&ev.endDate<ev.date){err("La date de fin doit être égale ou postérieure à la date de début.");return}
   if(ev.endDate===ev.date)ev.endDate="";
@@ -224,12 +242,12 @@ $("f").onsubmit=async e=>{
   }catch(ex){err("Enregistrement impossible : "+ex.message)}
 };
 
-$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);document.querySelectorAll("#zs input").forEach(c=>c.checked=zones.includes(c.value));$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
+$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);document.querySelectorAll("#zs input").forEach(c=>c.checked=zones.includes(c.value));$("fe").checked=showFer;$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
 $("cn2").onclick=()=>$("sn").classList.remove("open");
 $("out").onclick=()=>{if(confirm("Cet appareil quittera l'agenda actuel. Continuer ?")){store.del("ag_fid");location.reload()}};
 $("fn").onsubmit=async e=>{
   e.preventDefault();
-  zones=[...document.querySelectorAll("#zs input:checked")].map(c=>c.value).join("");store.set("ag_zones",zones);render();
+  zones=[...document.querySelectorAll("#zs input:checked")].map(c=>c.value).join("");store.set("ag_zones",zones);showFer=$("fe").checked;store.set("ag_fer",showFer?"1":"0");render();
   const n=[...document.querySelectorAll(".nm")].map((i,k)=>i.value.trim()||names[k]);
   try{await setDoc(doc(db,"families",fid,"meta","names"),{names:n});names=n;$("sn").classList.remove("open");render()}
   catch(ex){err("Enregistrement impossible : "+ex.message)}
