@@ -9,6 +9,7 @@
 :root{--bg:#faf8f5;--card:#fff;--tx:#2a2622;--mu:#8a8178;--bd:#e8e2da;--ac:#2f6f5e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root{--bg:#1b1917;--card:#262321;--tx:#f1ece6;--mu:#a39a90;--bd:#3a3531;--ac:#5fb8a0}}
 *{box-sizing:border-box}
+:root{--za:color-mix(in srgb,#f2b705 32%,var(--card));--zb:color-mix(in srgb,#ff7eb6 32%,var(--card));--zc:color-mix(in srgb,#19b5d6 32%,var(--card))}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;max-width:520px;margin-inline:auto;padding:12px 12px 90px}
 button,input,textarea{font:inherit;color:inherit}
 h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;align-items:center}
@@ -25,13 +26,14 @@ h1{font-size:20px;margin:4px 0 10px;display:flex;justify-content:space-between;a
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .dn{text-align:center;font-size:12px;color:var(--mu)}
 .d{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:14px}
-.d.out{opacity:.35}.d.vac{background:color-mix(in srgb,#f2b705 24%,var(--card))}.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac);color:#fff}
+.d.out{opacity:.35}.d.today{border-color:var(--ac);font-weight:700}.d.sel{background:var(--ac)!important;color:#fff}
 .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:auto}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--c)}
 h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ev{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--c);border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px}
 .ev .m{flex:1;min-width:0}.ev .t{font-weight:600}.ev .s{font-size:13px;color:var(--mu)}
-.ev .x{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
+.ev .x,.ev .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
+.ev .ed{font-size:16px}
 .empty{color:var(--mu);font-size:14px;text-align:center;padding:14px}
 .fab{position:fixed;right:max(16px,calc(50% - 244px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:30px;box-shadow:0 4px 14px #0004;cursor:pointer}
 .sheet{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;justify-content:center;z-index:5}
@@ -44,7 +46,10 @@ h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 #msg{background:#c0392b;color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:10px;display:none;font-size:14px}
 small{color:var(--mu)}
 .vinfo{font-size:13px;color:var(--mu);margin-top:8px}
-.vb{display:inline-block;background:color-mix(in srgb,#f2b705 24%,var(--card));border-radius:8px;padding:3px 9px;font-size:13px;margin-bottom:8px}
+.vb{display:inline-block;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:3px 9px;font-size:13px;margin:0 6px 8px 0}
+.zq{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:1px solid #0002}
+.sheet input[type=checkbox]{width:auto;padding:0}
+.vinfo div{margin-top:3px}
 .sheet select{border:1px solid var(--bd);background:var(--bg);border-radius:10px;padding:10px;width:100%}
 </style>
 </head>
@@ -63,20 +68,22 @@ small{color:var(--mu)}
 <button class="fab" id="add" aria-label="Ajouter un événement">+</button>
 
 <div class="sheet" id="sh"><form id="f">
-  <b>Nouvel événement</b>
+  <b id="ft">Nouvel événement</b>
   <input id="ti" placeholder="Titre" required maxlength="80">
   <div class="row"><input id="da" type="date" required><input id="ho" type="time"></div>
+  <small>Date de fin (si l'événement dure plusieurs jours)</small>
+  <input id="df" type="date">
   <input id="lo" placeholder="Lieu (facultatif)" maxlength="80">
   <textarea id="de2" rows="2" placeholder="Description (facultatif)" maxlength="300"></textarea>
-  <button class="ok">Ajouter pour <span id="au"></span></button>
+  <button class="ok"><span id="pf">Ajouter pour </span><span id="au"></span></button>
   <button type="button" class="ghost" id="cn">Annuler</button>
 </form></div>
 
 <div class="sheet" id="sn"><form id="fn">
   <b>Prénoms de la famille</b>
   <input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20"><input class="nm" maxlength="20">
-  <small>Vacances scolaires affichées (réglage propre à cet appareil)</small>
-  <select id="zn"><option value="A">Zone A</option><option value="B">Zone B</option><option value="C">Zone C</option><option value="none">Ne pas afficher</option></select>
+  <small>Vacances scolaires : cochez une ou plusieurs zones (réglage propre à cet appareil)</small>
+  <div class="row" id="zs"><label class="chip"><input type="checkbox" value="A"><span class="zq" style="background:var(--za);margin:0"></span>Zone A</label><label class="chip"><input type="checkbox" value="B"><span class="zq" style="background:var(--zb);margin:0"></span>Zone B</label><label class="chip"><input type="checkbox" value="C"><span class="zq" style="background:var(--zc);margin:0"></span>Zone C</label></div>
   <button class="ok">Enregistrer</button>
   <button type="button" class="ghost" id="cn2">Annuler</button>
   <small>Lien d'invitation pour les autres : <span id="lk"></span></small>
@@ -92,7 +99,7 @@ small{color:var(--mu)}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,collection,doc,addDoc,deleteDoc,setDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,doc,addDoc,deleteDoc,updateDoc,setDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ====== À REMPLACER par la configuration de votre projet Firebase ====== */
 const firebaseConfig = {
@@ -110,7 +117,8 @@ let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],me=0,sel=new D
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 me=+store.get("ag_me")||0;
-let zone=store.get("ag_zone")||"C";
+let editId=null;
+let zones=store.get("ag_zones")??(store.get("ag_zone")?(store.get("ag_zone")==="none"?"":store.get("ag_zone")):"C");
 /* Vacances scolaires 2026-2027 (dernier jour de vacances inclus). Source : calendrier officiel Éducation nationale. */
 const VAC=[
  {n:"Vacances de la Toussaint",s:"2026-10-17",e:"2026-11-01",z:"ABC"},
@@ -124,7 +132,11 @@ const VAC=[
  {n:"Pont de l'Ascension",s:"2027-05-06",e:"2027-05-09",z:"ABC"},
  {n:"Vacances d'été",s:"2027-07-03",e:"2027-09-01",z:"ABC"}
 ];
-const vacOn=k=>VAC.find(v=>v.z.includes(zone)&&k>=v.s&&k<=v.e);
+const ZC={A:"var(--za)",B:"var(--zb)",C:"var(--zc)"};
+const zonesOn=k=>[...zones].filter(z=>VAC.some(v=>v.z.includes(z)&&k>=v.s&&k<=v.e));
+const bgOf=zz=>{if(!zz.length)return"";if(zz.length===1)return"background:"+ZC[zz[0]];const n=zz.length;return"background:linear-gradient(to bottom,"+zz.map((z,i)=>`${ZC[z]} ${i*100/n}% ${(i+1)*100/n}%`).join(",")+")"};
+const vacs=(a,b)=>VAC.map(v=>({...v,zs:[...v.z].filter(z=>zones.includes(z))})).filter(v=>v.zs.length&&v.s<=b&&v.e>=a).sort((x,y)=>x.s.localeCompare(y.s));
+const sq=zs=>zs.map(z=>`<span class="zq" style="background:${ZC[z]}"></span>`).join("");
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=(s,o)=>new Date(s+"T12:00").toLocaleDateString("fr-FR",o);
@@ -132,18 +144,20 @@ const err=t=>{const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"}
 
 function who(){
   $("who").innerHTML=names.map((n,i)=>`<button class="chip ${i===me?"on":""}" style="--c:${COL[i]}" data-i="${i}"><span class="dot"></span>${esc(n)}</button>`).join("");
-  $("au").textContent=names[me];
+  $("au").textContent=editId?"":names[me];
 }
 $("who").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;me=+b.dataset.i;store.set("ag_me",me);who()};
 
 function evHtml(e){
   const c=COL[e.by]??COL[0];
-  const meta=[e.time,e.place&&"📍 "+e.place].filter(Boolean).join(" · ");
+  const dm2={day:"numeric",month:"short"};
+  const range=e.endDate&&e.endDate>e.date?`du ${fmt(e.date,dm2)} au ${fmt(e.endDate,dm2)}`:"";
+  const meta=[range,e.time,e.place&&"📍 "+e.place].filter(Boolean).join(" · ");
   return `<div class="ev" style="--c:${c}"><div class="m"><div class="t">${esc(e.title)}</div>
   <div class="s">${esc(names[e.by]??"?")}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${esc(e.desc)}</div>`:""}</div>
-  <button class="x" data-id="${esc(e.id)}" aria-label="Supprimer">🗑</button></div>`;
+  <button class="ed" data-id="${esc(e.id)}" aria-label="Modifier">✏️</button><button class="x" data-id="${esc(e.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
-const byDay=d=>events.filter(e=>e.date===d);
+const byDay=d=>events.filter(e=>e.date<=d&&(e.endDate||e.date)>=d);
 
 function render(){
   who();
@@ -152,20 +166,19 @@ function render(){
   const off=(new Date(y,mo,1).getDay()+6)%7,start=new Date(y,mo,1-off);
   let h=["L","M","M","J","V","S","D"].map(x=>`<div class="dn">${x}</div>`).join("");
   for(let i=0;i<42;i++){
-    const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d);
+    const d=new Date(start);d.setDate(start.getDate()+i);const k=iso(d),zz=zonesOn(k);
     const dots=byDay(k).slice(0,6).map(e=>`<i style="--c:${COL[e.by]??COL[0]}"></i>`).join("");
-    h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${vacOn(k)?"vac":""} ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}">${d.getDate()}<span class="dots">${dots}</span></div>`;
+    h+=`<div class="d ${d.getMonth()!==mo?"out":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}">${d.getDate()}<span class="dots">${dots}</span></div>`;
   }
   $("g").innerHTML=h;
   const mS=iso(new Date(y,mo,1)),mE=iso(new Date(y,mo+1,0)),dm={day:"numeric",month:"short"};
-  const vm=VAC.filter(v=>v.z.includes(zone)&&v.s<=mE&&v.e>=mS);
-  $("vi").innerHTML=vm.length?"🟨 "+vm.map(v=>`${esc(v.n)} : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}`).join(" · ")+` (zone ${zone})`:"";
-  const vs=vacOn(iso(sel));$("vb").innerHTML=vs?`<span class="vb">🏖️ ${esc(vs.n)}</span>`:"";
+  $("vi").innerHTML=vacs(mS,mE).map(v=>`<div>${sq(v.zs)}${esc(v.n)} (zone ${v.zs.join("/")}) : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}</div>`).join("");
+  $("vb").innerHTML=vacs(iso(sel),iso(sel)).map(v=>`<span class="vb">${sq(v.zs)}🏖️ ${esc(v.n)} · zone ${v.zs.join("/")}</span>`).join("");
   const l=byDay(iso(sel));
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
   const today=iso(new Date());let lh="",last="";
-  for(const e of events.filter(e=>e.date>=today)){if(e.date!==last){last=e.date;lh+=`<h2>${fmt(e.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}lh+=evHtml(e)}
+  for(const e of events.filter(e=>(e.endDate||e.date)>=today)){const g=e.date<today?today:e.date;if(g!==last){last=g;lh+=`<h2>${g===today?"Aujourd'hui":fmt(g,{weekday:"long",day:"numeric",month:"long"})}</h2>`}lh+=evHtml(e)}
   $("vl").innerHTML=lh||`<div class="empty">Aucun événement à venir</div>`;
 }
 $("g").onclick=e=>{const d=e.target.closest(".d");if(!d)return;sel=new Date(d.dataset.d+"T12:00");render()};
@@ -179,22 +192,44 @@ document.body.addEventListener("click",async e=>{
   if(!confirm("Supprimer cet événement ?"))return;
   try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.id));err("")}catch(ex){err("Suppression impossible : "+ex.message)}
 });
-$("add").onclick=()=>{$("da").value=iso(sel);$("sh").classList.add("open");$("ti").focus()};
-$("cn").onclick=()=>$("sh").classList.remove("open");
+function openForm(ev){
+  editId=ev?ev.id:null;
+  $("f").reset();
+  $("ft").textContent=ev?"Modifier l'événement":"Nouvel événement";
+  $("pf").textContent=ev?"Enregistrer":"Ajouter pour ";
+  if(ev){$("ti").value=ev.title||"";$("da").value=ev.date||"";$("df").value=ev.endDate||"";$("ho").value=ev.time||"";$("lo").value=ev.place||"";$("de2").value=ev.desc||""}
+  else $("da").value=iso(sel);
+  $("df").min=$("da").value;
+  who();$("sh").classList.add("open");$("ti").focus();
+}
+$("add").onclick=()=>openForm(null);
+$("da").onchange=()=>{$("df").min=$("da").value};
+$("cn").onclick=()=>{editId=null;who();$("sh").classList.remove("open")};
+document.body.addEventListener("click",e=>{
+  const b=e.target.closest(".ed");if(!b)return;
+  const ev=events.find(x=>x.id===b.dataset.id);if(ev)openForm(ev);
+});
 $("f").onsubmit=async e=>{
   e.preventDefault();if(!db)return;
-  const ev={title:$("ti").value.trim(),date:$("da").value,time:$("ho").value,place:$("lo").value.trim(),desc:$("de2").value.trim(),by:me,at:Date.now()};
+  const ev={title:$("ti").value.trim(),date:$("da").value,endDate:$("df").value,time:$("ho").value,place:$("lo").value.trim(),desc:$("de2").value.trim()};
   if(!ev.title||!ev.date)return;
-  try{await addDoc(collection(db,"families",fid,"events"),ev);$("f").reset();$("sh").classList.remove("open");sel=new Date(ev.date+"T12:00");cur=new Date(sel.getFullYear(),sel.getMonth(),1);err("");render()}
-  catch(ex){err("Ajout impossible : "+ex.message)}
+  if(ev.endDate&&ev.endDate<ev.date){err("La date de fin doit être égale ou postérieure à la date de début.");return}
+  if(ev.endDate===ev.date)ev.endDate="";
+  try{
+    const ref=collection(db,"families",fid,"events");
+    if(editId)await updateDoc(doc(db,"families",fid,"events",editId),ev);
+    else await addDoc(ref,{...ev,by:me,at:Date.now()});
+    editId=null;$("f").reset();$("sh").classList.remove("open");
+    sel=new Date(ev.date+"T12:00");cur=new Date(sel.getFullYear(),sel.getMonth(),1);err("");render();
+  }catch(ex){err("Enregistrement impossible : "+ex.message)}
 };
 
-$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);$("zn").value=zone;$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
+$("edit").onclick=()=>{document.querySelectorAll(".nm").forEach((i,k)=>i.value=names[k]);document.querySelectorAll("#zs input").forEach(c=>c.checked=zones.includes(c.value));$("lk").textContent=location.origin+location.pathname+"#c="+fid;$("sn").classList.add("open")};
 $("cn2").onclick=()=>$("sn").classList.remove("open");
 $("out").onclick=()=>{if(confirm("Cet appareil quittera l'agenda actuel. Continuer ?")){store.del("ag_fid");location.reload()}};
 $("fn").onsubmit=async e=>{
   e.preventDefault();
-  zone=$("zn").value;store.set("ag_zone",zone);render();
+  zones=[...document.querySelectorAll("#zs input:checked")].map(c=>c.value).join("");store.set("ag_zones",zones);render();
   const n=[...document.querySelectorAll(".nm")].map((i,k)=>i.value.trim()||names[k]);
   try{await setDoc(doc(db,"families",fid,"meta","names"),{names:n});names=n;$("sn").classList.remove("open");render()}
   catch(ex){err("Enregistrement impossible : "+ex.message)}
