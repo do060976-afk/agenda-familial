@@ -39,7 +39,7 @@ h2{font-size:15px;margin:16px 0 8px;text-transform:capitalize}
 .ev .ed{font-size:16px}
 .empty{color:var(--mu);font-size:14px;text-align:center;padding:14px}
 .fab{position:fixed;right:max(16px,calc(50% - 244px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:30px;box-shadow:0 4px 14px #0004;cursor:pointer}
-.fab.bd{background:#9b51e0;font-size:24px;right:max(16px,calc(50% - 244px));bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.fab.bd{background:#9b51e0;font-size:24px;bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .sheet{position:fixed;inset:0;background:#0006;display:none;align-items:flex-end;justify-content:center;z-index:5}
 .sheet.open{display:flex}
 .sheet form{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;max-height:90vh;overflow-y:auto}
@@ -57,7 +57,8 @@ small{color:var(--mu)}
 .saint{font-size:13px;color:var(--mu);font-style:italic;margin-bottom:8px}
 .bd{background:var(--card);border:1px solid var(--bd);border-left:5px solid #9b51e0;border-radius:10px;padding:9px 12px;margin-bottom:8px;display:flex;gap:8px;align-items:center}
 .bd .m{flex:1;min-width:0}.bd .t{font-weight:600}.bd .s{font-size:13px;color:var(--mu)}
-.bd .x{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
+.bd .x,.bd .ed{border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:0 4px}
+.bd .ed{font-size:16px}
 </style>
 </head>
 <body>
@@ -287,7 +288,7 @@ function evHtml(e){
 /* Calcule la prochaine occurrence d'un anniversaire à partir d'aujourd'hui */
 function nextBd(b){
   const today=new Date();today.setHours(0,0,0,0);
-  let y=today.getFullYear();
+  const y=today.getFullYear();
   const mk=yy=>new Date(yy,b.month-1,b.day);
   let d=mk(y);
   if(d<today)d=mk(y+1);
@@ -300,7 +301,7 @@ function bdHtml(b){
   const dateStr=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   return `<div class="bd"><span style="font-size:22px">🎂</span><div class="m"><div class="t">${esc(b.name)}</div>
   <div class="s">${esc(dateStr)} · ${when}${b.note?" · "+esc(b.note):""}</div></div>
-  <button class="ed" data-bdid="${esc(b.id)}" aria-label="Modifier" style="border:0;background:none;color:var(--mu);font-size:16px;cursor:pointer;padding:0 4px">✏️</button>
+  <button class="ed" data-bdid="${esc(b.id)}" aria-label="Modifier">✏️</button>
   <button class="x" data-bdid="${esc(b.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
 
@@ -319,13 +320,26 @@ function render(){
     h+=`<div class="d ${d.getMonth()!==mo?"out":""} ${ferieOn(k)?"fer":""}  ${k===iso(new Date())?"today":""} ${k===iso(sel)?"sel":""}" data-d="${k}" style="${bgOf(zz)}" title="${esc(ferieOn(k)||"")}">${d.getDate()}<span class="dots">${dots}</span></div>`;
   }
   $("g").innerHTML=h;
+
+  /* Encart sous la grille : jours fériés du mois + vacances scolaires + anniversaires du mois */
   const mS=iso(new Date(y,mo,1)),mE=iso(new Date(y,mo+1,0)),dm={day:"numeric",month:"short"};
-  let fh="";if(showFer){const nd=new Date(y,mo+1,0).getDate();for(let n=1;n<=nd;n++){const k=iso(new Date(y,mo,n)),f=ferieOn(k);if(f)fh+=`<div>🎌 ${esc(f)} : ${fmt(k,{weekday:"long",day:"numeric",month:"long"})}</div>`}}
-  $("vi").innerHTML=fh+vacs(mS,mE).map(v=>`<div>${sq(v.zs)}${esc(v.n)} (zone ${v.zs.join("/")}) : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}</div>`).join("");
+  let fh="";
+  if(showFer){
+    const nd=new Date(y,mo+1,0).getDate();
+    for(let n=1;n<=nd;n++){
+      const k=iso(new Date(y,mo,n)),f=ferieOn(k);
+      if(f)fh+=`<div>🎌 ${esc(f)} : ${fmt(k,{weekday:"long",day:"numeric",month:"long"})}</div>`;
+    }
+  }
+  const vacLines=vacs(mS,mE).map(v=>`<div>${sq(v.zs)}${esc(v.n)} (zone ${v.zs.join("/")}) : ${fmt(v.s,dm)} → ${fmt(v.e,dm)}</div>`).join("");
+  /* Anniversaires du mois courant, triés par jour croissant */
+  const bdThisMonth=birthdays.filter(b=>b.month===mo+1).sort((a,b)=>a.day-b.day);
+  const bdLine=bdThisMonth.length?`<div>🎂 Anniversaires du mois : ${bdThisMonth.map(b=>`${esc(b.name)} (${b.day})`).join(", ")}</div>`:"";
+  $("vi").innerHTML=fh+vacLines+bdLine;
+
   $("vb").innerHTML=(ferieOn(iso(sel))?`<span class="vb">🎌 ${esc(ferieOn(iso(sel)))}</span>`:"")+vacs(iso(sel),iso(sel)).map(v=>`<span class="vb">${sq(v.zs)}🏖️ ${esc(v.n)} · zone ${v.zs.join("/")}</span>`).join("");
   const l=byDay(iso(sel));
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
-  /* Saint du jour sous la date */
   $("sn").textContent=showSaint&&saintOf(iso(sel))?"📿 "+saintOf(iso(sel)):"";
   $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
 
@@ -354,16 +368,16 @@ $("tl").onclick=()=>{$("vm").style.display="none";$("vl").style.display="";$("tl
 
 /* Suppression (événements ET anniversaires) */
 document.body.addEventListener("click",async e=>{
-  const x=x=>e.target.closest(x);
-  const ex=x(".x"),eb=x("[data-bdid].x")||(x(".x")&&x(".x").dataset.bdid);
-  if(ex&&ex.dataset.bdid&&db){
+  const x=e.target.closest(".x");
+  if(!x||!db)return;
+  if(x.dataset.bdid){
     if(!confirm("Supprimer cet anniversaire ?"))return;
-    try{await deleteDoc(doc(db,"families",fid,"events",ex.dataset.bdid));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
+    try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.bdid));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
     return;
   }
-  if(ex&&ex.dataset.id&&db){
+  if(x.dataset.id){
     if(!confirm("Supprimer cet événement ?"))return;
-    try{await deleteDoc(doc(db,"families",fid,"events",ex.dataset.id));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
+    try{await deleteDoc(doc(db,"families",fid,"events",x.dataset.id));err("")}catch(err2){err("Suppression impossible : "+err2.message)}
   }
 });
 /* Édition (événements ET anniversaires) */
