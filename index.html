@@ -64,6 +64,14 @@ small{color:var(--mu)}
 .bd .ed{font-size:16px}
 .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .settings-actions button{flex:1;min-width:130px}
+.searchbar{position:relative;margin-bottom:10px;display:flex;gap:6px;align-items:center}
+.searchbar input{flex:1;border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:10px 36px 10px 12px;width:100%}
+.searchbar .clr{position:absolute;right:8px;border:0;background:none;color:var(--mu);font-size:20px;cursor:pointer;padding:4px;display:none}
+.searchbar.has .clr{display:block}
+mark{background:#ffe68a;color:inherit;padding:0 2px;border-radius:3px}
+@media (prefers-color-scheme:dark){mark{background:#7a6517;color:#fff}}
+.sresults .empty{margin-top:20px}
+.scount{font-size:13px;color:var(--mu);margin:0 0 10px}
 </style>
 </head>
 <body>
@@ -74,7 +82,11 @@ small{color:var(--mu)}
 <div id="msg"></div>
 <div id="offline">📡 Hors-ligne — les modifications seront synchronisées au retour du réseau</div>
 <div class="who" id="who"></div>
-<div class="tabs"><button id="tm" class="on">Mois</button><button id="tw">Cette semaine</button><button id="tl">À venir</button></div>
+<div class="searchbar" id="searchbar">
+  <input id="sq" type="search" placeholder="🔍 Rechercher (titre, lieu, description, personne…)" autocomplete="off" autocapitalize="off">
+  <button class="clr" id="sclr" aria-label="Effacer la recherche">×</button>
+</div>
+<div class="tabs" id="tabsBar"><button id="tm" class="on">Mois</button><button id="tw">Cette semaine</button><button id="tl">À venir</button></div>
 <div id="vm">
   <div class="nav">
     <button id="pv" aria-label="Mois précédent">‹</button>
@@ -90,6 +102,7 @@ small{color:var(--mu)}
 </div>
 <div id="vw" style="display:none"></div>
 <div id="vl" style="display:none"></div>
+<div id="vs" style="display:none" class="sresults"></div>
 <button class="fab bd" id="addb" aria-label="Ajouter un anniversaire">🎂</button>
 <button class="fab" id="add" aria-label="Ajouter un événement">+</button>
 
@@ -162,7 +175,8 @@ const firebaseConfig = {
 
 const COL=["#e4572e","#2f80ed","#27ae60","#9b51e0"];
 let names=["Membre 1","Membre 2","Membre 3","Membre 4"],events=[],birthdays=[],me=0,sel=new Date(),cur=new Date(),fid="",db=null;
-let view="m"; /* "m" = mois, "w" = semaine, "l" = à venir */
+let view="m"; /* "m" = mois, "w" = semaine, "l" = à venir, "s" = recherche */
+let query=""; /* texte courant de la recherche */
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 me=+store.get("ag_me")||0;
@@ -286,6 +300,58 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const fmt=(s,o)=>new Date(s+"T12:00").toLocaleDateString("fr-FR",o);
 const err=t=>{const m=$("msg");m.textContent=t;m.style.display=t?"block":"none"};
 
+/* ====== RECHERCHE : normalisation (casse + accents) ====== */
+/* Transforme "École" en "ecole" pour comparer sans souci d'accent ni de casse */
+function norm(s){
+  return String(s??"")
+    .toLowerCase()
+    .normalize("NFD")              /* sépare les lettres de leurs accents */
+    .replace(/[\u0300-\u036f]/g,""); /* supprime les accents */
+}
+/* Renvoie true si tous les mots de la requête sont présents dans le texte cible */
+function matchesQuery(text,words){
+  const t=norm(text);
+  return words.every(w=>t.includes(w));
+}
+/* Entoure les occurrences trouvées avec <mark> */
+function highlight(text,words){
+  const raw=String(text??"");
+  if(!words.length)return esc(raw);
+  /* On cherche sur la version normalisée pour trouver les positions, mais on rend le texte original */
+  const n=norm(raw);
+  const found=[];
+  for(const w of words){
+    let from=0,idx;
+    while((idx=n.indexOf(w,from))!==-1){
+      found.push([idx,idx+w.length]);
+      from=idx+w.length;
+    }
+  }
+  if(!found.length)return esc(raw);
+  /* Fusionne les chevauchements puis découpe */
+  found.sort((a,b)=>a[0]-b[0]);
+  const merged=[];
+  for(const seg of found){
+    const last=merged[merged.length-1];
+    if(last&&seg[0]<=last[1])last[1]=Math.max(last[1],seg[1]);
+    else merged.push([...seg]);
+  }
+  let out="",pos=0;
+  for(const [s,e] of merged){
+    out+=esc(raw.slice(pos,s))+"<mark>"+esc(raw.slice(s,e))+"</mark>";
+    pos=e;
+  }
+  out+=esc(raw.slice(pos));
+  return out;
+}
+/* Renvoie le texte complet d'un événement (pour la recherche) */
+function evText(e){
+  const ws=wsOf(e).map(i=>names[i]??"").join(" ");
+  return [e.title,e.desc,e.place,ws].filter(Boolean).join(" ");
+}
+/* Renvoie le texte complet d'un anniversaire */
+function bdText(b){return [b.name,b.note].filter(Boolean).join(" ")}
+
 /* Remplit les listes déroulantes jour/mois du formulaire anniversaire */
 const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 $("bj").innerHTML=Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
@@ -297,13 +363,13 @@ function who(){
 }
 $("who").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;me=+b.dataset.i;store.set("ag_me",me);who()};
 
-function evHtml(e){
+function evHtml(e,words=[]){
   const ws=wsOf(e),n=ws.length,stripe=n===1?(COL[ws[0]]??COL[0]):"linear-gradient(to bottom,"+ws.map((i,k)=>`${COL[i]} ${k*100/n}% ${(k+1)*100/n}%`).join(",")+")";
   const dm2={day:"numeric",month:"short"};
   const range=e.endDate&&e.endDate>e.date?`du ${fmt(e.date,dm2)} au ${fmt(e.endDate,dm2)}`:"";
   const meta=[range,e.time,e.place&&"📍 "+e.place].filter(Boolean).join(" · ");
-  return `<div class="ev"><i class="st" style="background:${stripe}"></i><div class="m"><div class="t">${esc(e.title)}</div>
-  <div class="s">${esc(ws.map(i=>names[i]??"?").join(", "))}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${esc(e.desc)}</div>`:""}</div>
+  return `<div class="ev"><i class="st" style="background:${stripe}"></i><div class="m"><div class="t">${highlight(e.title,words)}</div>
+  <div class="s">${esc(ws.map(i=>names[i]??"?").join(", "))}${meta?" · "+esc(meta):""}</div>${e.desc?`<div class="s">${highlight(e.desc,words)}</div>`:""}</div>
   <button class="ed" data-id="${esc(e.id)}" aria-label="Modifier">✏️</button><button class="x" data-id="${esc(e.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
 
@@ -316,13 +382,13 @@ function nextBd(b){
   if(d<today)d=mk(y+1);
   return d;
 }
-function bdHtml(b){
+function bdHtml(b,words=[]){
   const d=nextBd(b);
   const inDays=Math.round((d-new Date().setHours(0,0,0,0))/86400000);
   const when=inDays===0?"Aujourd'hui 🎉":inDays===1?"Demain":`dans ${inDays} jours`;
   const dateStr=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
-  return `<div class="bd"><span style="font-size:22px">🎂</span><div class="m"><div class="t">${esc(b.name)}</div>
-  <div class="s">${esc(dateStr)} · ${when}${b.note?" · "+esc(b.note):""}</div></div>
+  return `<div class="bd"><span style="font-size:22px">🎂</span><div class="m"><div class="t">${highlight(b.name,words)}</div>
+  <div class="s">${esc(dateStr)} · ${when}${b.note?" · "+highlight(b.note,words):""}</div></div>
   <button class="ed" data-bdid="${esc(b.id)}" aria-label="Modifier">✏️</button>
   <button class="x" data-bdid="${esc(b.id)}" aria-label="Supprimer">🗑</button></div>`;
 }
@@ -354,7 +420,7 @@ function render(){
   }
   $("g").innerHTML=h;
 
-  /* Encart sous la grille : jours fériés du mois + vacances scolaires + anniversaires du mois */
+  /* Encart sous la grille : jours fériés + vacances + anniversaires du mois */
   const mS=iso(new Date(y,mo,1)),mE=iso(new Date(y,mo+1,0)),dm={day:"numeric",month:"short"};
   let fh="";
   if(showFer){
@@ -373,7 +439,7 @@ function render(){
   const l=byDay(iso(sel));
   $("dl").textContent=sel.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   $("sn").textContent=showSaint&&saintOf(iso(sel))?"📿 "+saintOf(iso(sel)):"";
-  $("de").innerHTML=l.length?l.map(evHtml).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
+  $("de").innerHTML=l.length?l.map(e=>evHtml(e)).join(""):`<div class="empty">Rien de prévu ce jour-là</div>`;
 
   /* --- Vue Semaine --- */
   const todayStr=iso(new Date());
@@ -407,7 +473,45 @@ function render(){
     lh+=it.kind==="bd"?bdHtml(it.data):evHtml(it.data);
   }
   $("vl").innerHTML=lh||`<div class="empty">Aucun événement à venir</div>`;
+
+  /* --- Vue Recherche --- */
+  renderSearch();
 }
+
+/* ====== AFFICHAGE DES RÉSULTATS DE RECHERCHE ====== */
+function renderSearch(){
+  const el=$("vs");
+  if(!query){el.innerHTML="";return}
+  const words=query.split(/\s+/).filter(Boolean).map(norm);
+  if(!words.length){el.innerHTML="";return}
+  const todayStr=iso(new Date());
+  const results=[];
+  /* Événements à venir uniquement (date de fin >= aujourd'hui) */
+  for(const e of events.filter(e=>(e.endDate||e.date)>=todayStr)){
+    if(matchesQuery(evText(e),words)){
+      results.push({kind:"ev",date:e.date<todayStr?todayStr:e.date,data:e});
+    }
+  }
+  /* Anniversaires (toujours "à venir" puisqu'ils reviennent chaque année) */
+  for(const b of birthdays){
+    if(matchesQuery(bdText(b),words)){
+      results.push({kind:"bd",date:iso(nextBd(b)),data:b});
+    }
+  }
+  results.sort((a,b)=>a.date.localeCompare(b.date));
+  let html=`<div class="scount">${results.length} résultat${results.length>1?"s":""} pour « ${esc(query)} »</div>`;
+  if(!results.length){
+    html+=`<div class="empty">Aucun résultat</div>`;
+  }else{
+    let last="";
+    for(const it of results){
+      if(it.date!==last){last=it.date;html+=`<h2>${it.date===todayStr?"Aujourd'hui":fmt(it.date,{weekday:"long",day:"numeric",month:"long"})}</h2>`}
+      html+=it.kind==="bd"?bdHtml(it.data,words):evHtml(it.data,words);
+    }
+  }
+  el.innerHTML=html;
+}
+
 $("g").onclick=e=>{const d=e.target.closest(".d");if(!d)return;sel=new Date(d.dataset.d+"T12:00");render()};
 $("pv").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()};
 $("nx").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()};
@@ -417,14 +521,33 @@ function setView(v){
   $("vm").style.display=v==="m"?"":"none";
   $("vw").style.display=v==="w"?"":"none";
   $("vl").style.display=v==="l"?"":"none";
+  $("vs").style.display=v==="s"?"":"none";
   $("tm").className=v==="m"?"on":"";
   $("tw").className=v==="w"?"on":"";
   $("tl").className=v==="l"?"on":"";
+  $("tabsBar").style.display=v==="s"?"none":"";
   render();
 }
 $("tm").onclick=()=>setView("m");
 $("tw").onclick=()=>setView("w");
 $("tl").onclick=()=>setView("l");
+
+/* ====== GESTION DE LA BARRE DE RECHERCHE ====== */
+const searchInput=$("sq"),searchBar=$("searchbar");
+searchInput.addEventListener("input",()=>{
+  query=searchInput.value.trim();
+  searchBar.classList.toggle("has",!!query);
+  if(query){
+    /* Bascule en vue recherche (sans casser la vue précédente, mémorisée dans view si on vide) */
+    if(view!=="s")setView("s");
+    else render();
+  }else{
+    /* Retour à la vue par défaut (Mois) quand on vide */
+    if(view==="s")setView("m");
+    else render();
+  }
+});
+$("sclr").onclick=()=>{searchInput.value="";query="";searchBar.classList.remove("has");setView("m");searchInput.focus()};
 
 /* Suppression (événements ET anniversaires) */
 document.body.addEventListener("click",async e=>{
